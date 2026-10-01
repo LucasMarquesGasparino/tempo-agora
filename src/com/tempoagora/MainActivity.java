@@ -63,6 +63,7 @@ public final class MainActivity extends Activity {
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private final WeatherApiClient api = new WeatherApiClient();
     private final List<Place> favorites = new ArrayList<>();
+    private final List<View> dailyForecastRows = new ArrayList<>();
     private final java.util.LinkedHashMap<String, WeatherSnapshot> snapshots = new java.util.LinkedHashMap<>();
 
     private SharedPreferences preferences;
@@ -80,6 +81,7 @@ public final class MainActivity extends Activity {
     private String statusMessage = "";
     private int selectedHour = -1;
     private int selectedDay = -1;
+    private int pendingDailyScroll = -1;
     private LocationManager locationManager;
     private LocationListener legacyLocationListener;
     private CancellationSignal locationCancellation;
@@ -133,7 +135,7 @@ public final class MainActivity extends Activity {
         }
         page = new LinearLayout(this);
         page.setOrientation(LinearLayout.VERTICAL);
-        page.setPadding(dp(18), dp(10), dp(18), dp(30));
+        page.setPadding(dp(16), dp(6), dp(16), dp(24));
         scrollView.addView(page, new ScrollView.LayoutParams(-1, -2));
         setContentView(scrollView);
         if (Build.VERSION.SDK_INT >= 20) scrollView.post(() -> scrollView.requestApplyInsets());
@@ -143,38 +145,49 @@ public final class MainActivity extends Activity {
         if (page == null) return;
         int oldScroll = scrollView == null ? 0 : scrollView.getScrollY();
         page.removeAllViews();
+        dailyForecastRows.clear();
         page.addView(buildToolbar(), matchWrap());
-        page.addView(label("CLIMA NA SUA CIDADE", 11, MUTED, true), margins(-1, -2, 2, 0, 0, 4));
-        page.addView(buildPlaceHeader(), margins(-1, -2, 0, 0, 0, 12));
+        page.addView(buildPlaceHeader(), margins(-1, -2, 0, 0, 0, 7));
 
-        if (!statusMessage.isEmpty()) page.addView(buildStatusCard(), margins(-1, -2, 0, 0, 0, 12));
+        if (!statusMessage.isEmpty()) page.addView(buildStatusCard(), margins(-1, -2, 0, 0, 0, 8));
         WeatherSnapshot snapshot = activePlace == null ? null : snapshots.get(activePlace.key());
-        if (snapshot == null) page.addView(buildLoadingCard(), margins(-1, -2, 0, 0, 0, 14));
-        else page.addView(buildCurrentCard(snapshot), margins(-1, -2, 0, 0, 0, 14));
+        if (snapshot == null) page.addView(buildLoadingCard(), margins(-1, -2, 0, 0, 0, 9));
+        else page.addView(buildCurrentCard(snapshot), margins(-1, -2, 0, 0, 0, 9));
 
         if (!favorites.isEmpty() || devicePlace != null) {
-            page.addView(sectionHeading("Seus lugares", "Toque para consultar"), margins(-1, -2, 0, 3, 0, 6));
-            page.addView(buildFavoriteStrip(), margins(-1, dp(64), 0, 0, 0, 14));
+            page.addView(sectionHeading("Seus lugares", "Toque para consultar"), margins(-1, -2, 0, 0, 0, 4));
+            page.addView(buildFavoriteStrip(), margins(-1, dp(56), 0, 0, 0, 8));
         }
 
-        page.addView(buildTabs(), margins(-1, dp(46), 0, 0, 0, 14));
+        page.addView(buildTabs(), margins(-1, dp(44), 0, 0, 0, 8));
         if (snapshot != null) {
             if (dailyTab) buildDailyForecast(snapshot);
             else buildHourlyForecast(snapshot);
         } else {
             page.addView(infoCard("A previsão aparece assim que uma cidade for carregada."), matchWrap());
         }
-        page.addView(buildAttribution(), margins(-1, -2, 0, 18, 0, 6));
-        if (scrollView != null) scrollView.post(() -> scrollView.scrollTo(0, Math.max(0, oldScroll)));
+        page.addView(buildAttribution(), margins(-1, -2, 0, 12, 0, 4));
+        if (scrollView != null) scrollView.post(() -> {
+            scrollView.scrollTo(0, Math.max(0, oldScroll));
+            int index = pendingDailyScroll;
+            pendingDailyScroll = -1;
+            if (dailyTab && index >= 0 && index < dailyForecastRows.size()) {
+                int top = topInScrollContent(dailyForecastRows.get(index));
+                scrollView.smoothScrollTo(0, Math.max(0, top - dp(72)));
+            }
+        });
     }
 
     private View buildToolbar() {
         LinearLayout row = new LinearLayout(this);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(0, dp(2), 0, dp(15));
-        TextView mark = label("☀  Tempo Agora", 20, INK, true);
+        row.setPadding(0, 0, 0, dp(4));
+        TextView mark = label("Tempo Agora", 19, INK, true);
         row.addView(mark, new LinearLayout.LayoutParams(0, -2, 1));
-        row.addView(actionButton("⌕", "Buscar cidade", this::openCitySearch), margins(-2, dp(42), 0, 0, 6, 0));
+        TextView search = actionButton("Buscar", "Buscar cidade", this::openCitySearch);
+        search.setTextSize(13);
+        search.setPadding(dp(12), 0, dp(12), 0);
+        row.addView(search, margins(-2, dp(42), 0, 0, 6, 0));
         row.addView(actionButton(refreshing ? "…" : "↻", "Atualizar clima", () -> refreshWeather(true)), size(dp(42), dp(42)));
         return row;
     }
@@ -185,9 +198,9 @@ public final class MainActivity extends Activity {
         LinearLayout texts = new LinearLayout(this);
         texts.setOrientation(LinearLayout.VERTICAL);
         String name = activePlace == null ? "Escolha uma cidade" : activePlace.name;
-        texts.addView(label(name, 23, INK, true), wrapWrap());
+        texts.addView(label(name, 21, INK, true), wrapWrap());
         String subtitle = activePlace == null ? "Sua previsão começa aqui" : activePlace.subtitle();
-        texts.addView(label(subtitle, 13, MUTED, false), margins(-1, -2, 0, 3, 0, 0));
+        texts.addView(label(subtitle, 12, MUTED, false), margins(-1, -2, 0, 1, 0, 0));
         row.addView(texts, new LinearLayout.LayoutParams(0, -2, 1));
         String star = activePlace != null && isFavorite(activePlace) ? "★" : "☆";
         row.addView(actionButton(star, "Favoritar cidade", () -> toggleFavorite(activePlace)), size(dp(44), dp(44)));
@@ -231,34 +244,69 @@ public final class MainActivity extends Activity {
     }
 
     private View buildCurrentCard(WeatherSnapshot snapshot) {
-        LinearLayout card = verticalCard(Color.WHITE);
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(17), dp(15), dp(17), dp(13));
+        card.setBackground(weatherBackdrop(snapshot.currentWeatherCode));
         LinearLayout hero = new LinearLayout(this);
         hero.setGravity(Gravity.CENTER_VERTICAL);
         LinearLayout primary = new LinearLayout(this);
         primary.setOrientation(LinearLayout.VERTICAL);
+        primary.addView(label("AGORA", 10, Color.argb(210, 255, 255, 255), true), wrapWrap());
         String temperature = value(snapshot.currentTemperature, 0, "°");
-        primary.addView(label(temperature, 58, INK, true), wrapWrap());
-        primary.addView(label(condition(snapshot.currentWeatherCode), 15, MUTED, false), margins(-1, -2, 2, -3, 0, 0));
+        primary.addView(label(temperature, 56, Color.WHITE, true), margins(-1, -2, 0, -1, 0, 0));
+        primary.addView(label(condition(snapshot.currentWeatherCode), 14, Color.WHITE, true), wrapWrap());
+        WeatherSnapshot.Daily today = snapshot.daily.isEmpty() ? null : snapshot.daily.get(0);
+        if (today != null) {
+            primary.addView(label("Máx " + value(today.maxTemperature, 0, "°")
+                    + "  ·  Mín " + value(today.minTemperature, 0, "°"), 12,
+                    Color.argb(220, 255, 255, 255), false), margins(-1, -2, 0, 3, 0, 0));
+        }
         hero.addView(primary, new LinearLayout.LayoutParams(0, -2, 1));
-        TextView icon = label(weatherIcon(snapshot.currentWeatherCode), 55, BLUE, false);
+        TextView icon = label(weatherIcon(snapshot.currentWeatherCode), 48, Color.WHITE, false);
         icon.setGravity(Gravity.CENTER);
-        icon.setBackground(rounded(PALE_BLUE, 24));
-        hero.addView(icon, size(dp(96), dp(88)));
+        icon.setBackground(rounded(Color.argb(34, 255, 255, 255), 22));
+        hero.addView(icon, size(dp(72), dp(72)));
         card.addView(hero, matchWrap());
-        card.addView(label("Sensação de " + value(snapshot.currentFeelsLike, 0, "°")
-                + "  ·  " + value(snapshot.currentHumidity, 0, "%") + " de umidade", 14, INK, true),
-                margins(-1, -2, 0, 12, 0, 0));
 
-        LinearLayout metrics = new LinearLayout(this);
-        metrics.setOrientation(LinearLayout.VERTICAL);
-        metrics.addView(metricRow(
-                metric("Chuva recente", value(snapshot.currentPrecipitation, 1, " mm"), "últimos 15 min"),
-                metric("Próxima hora", nextChance(snapshot), nextRain(snapshot))), matchWrap());
-        card.addView(metrics, matchWrap());
+        View divider = new View(this);
+        divider.setBackgroundColor(Color.argb(70, 255, 255, 255));
+        card.addView(divider, margins(-1, dp(1), 0, 11, 0, 9));
+        card.addView(metricRow(
+                heroMetric("Sensação", value(snapshot.currentFeelsLike, 0, "°")),
+                heroMetric("Umidade", value(snapshot.currentHumidity, 0, "%")),
+                heroMetric("Chuva", value(snapshot.currentPrecipitation, 1, " mm"))), matchWrap());
+        WeatherSnapshot.Hourly next = nextHour(snapshot);
+        String nextLine = next == null ? "Próxima hora · sem previsão disponível"
+                : "Próxima hora  ·  " + value(next.precipitationProbability, 0, "%")
+                + " de chance  ·  " + value(next.precipitation, 1, " mm");
+        card.addView(label(nextLine, 11, Color.argb(230, 255, 255, 255), false),
+                margins(-1, -2, 0, 9, 0, 0));
         String time = snapshot.currentTime.length() >= 16 ? snapshot.currentTime.substring(11, 16) : "agora";
-        card.addView(label("Atualizado às " + time + " · condições do modelo", 11, MUTED, false),
-                margins(-1, -2, 0, 12, 0, 0));
+        card.addView(label("Modelo atualizado às " + time, 10,
+                Color.argb(195, 255, 255, 255), false), wrapWrap());
         return card;
+    }
+
+    private LinearLayout heroMetric(String title, String value) {
+        LinearLayout metric = new LinearLayout(this);
+        metric.setOrientation(LinearLayout.VERTICAL);
+        metric.addView(label(title.toUpperCase(new Locale("pt", "BR")), 10,
+                Color.argb(200, 255, 255, 255), true), wrapWrap());
+        metric.addView(label(value, 15, Color.WHITE, true), margins(-1, -2, 0, 2, 0, 0));
+        return metric;
+    }
+
+    private GradientDrawable weatherBackdrop(int weatherCode) {
+        int[] colors;
+        if (weatherCode >= 95) colors = new int[]{0xFF4D547C, 0xFF252E51};
+        else if (weatherCode >= 51 && weatherCode <= 82) colors = new int[]{0xFF287D98, 0xFF24516D};
+        else if (weatherCode == 3 || weatherCode == 45 || weatherCode == 48)
+            colors = new int[]{0xFF69889A, 0xFF425E72};
+        else colors = new int[]{0xFF2587AE, 0xFF23618B};
+        GradientDrawable background = new GradientDrawable(GradientDrawable.Orientation.TL_BR, colors);
+        background.setCornerRadius(dp(23));
+        return background;
     }
 
     private View buildFavoriteStrip() {
@@ -268,10 +316,10 @@ public final class MainActivity extends Activity {
         strip.setGravity(Gravity.CENTER_VERTICAL);
         if (devicePlace != null) {
             WeatherSnapshot localSnapshot = snapshots.get(devicePlace.key());
-            strip.addView(placeChip(devicePlace, localSnapshot, "⌖"), margins(-2, dp(54), 0, 0, 8, 0));
+            strip.addView(placeChip(devicePlace, localSnapshot, "⌖"), margins(-2, dp(52), 0, 0, 7, 0));
         }
         for (Place favorite : favorites) {
-            strip.addView(placeChip(favorite, snapshots.get(favorite.key()), "★"), margins(-2, dp(54), 0, 0, 8, 0));
+            strip.addView(placeChip(favorite, snapshots.get(favorite.key()), "★"), margins(-2, dp(52), 0, 0, 7, 0));
         }
         horizontal.addView(strip, new HorizontalScrollView.LayoutParams(-2, -1));
         return horizontal;
@@ -281,14 +329,14 @@ public final class MainActivity extends Activity {
         LinearLayout chip = new LinearLayout(this);
         chip.setGravity(Gravity.CENTER_VERTICAL);
         chip.setOrientation(LinearLayout.VERTICAL);
-        chip.setPadding(dp(12), dp(6), dp(12), dp(6));
-        chip.setBackground(rounded(place.key().equals(activePlace == null ? "" : activePlace.key()) ? PALE_BLUE : Color.WHITE, 14));
-        TextView top = label(prefix + "  " + place.name, 12, INK, true);
+        chip.setPadding(dp(11), dp(5), dp(11), dp(5));
+        chip.setBackground(rounded(place.key().equals(activePlace == null ? "" : activePlace.key()) ? 0xFFDCEFF7 : Color.WHITE, 14));
+        TextView top = label(prefix + "  " + place.name, 11, INK, true);
         top.setMaxLines(1);
         chip.addView(top, wrapWrap());
         String temp = snapshot == null ? "carregando…" : value(snapshot.currentTemperature, 0, "°")
                 + "  ·  " + weatherIcon(snapshot.currentWeatherCode);
-        chip.addView(label(temp, 11, MUTED, false), wrapWrap());
+        chip.addView(label(temp, 10, MUTED, false), wrapWrap());
         chip.setOnClickListener(v -> selectPlace(place));
         chip.setOnLongClickListener(v -> {
             if (isFavorite(place)) confirmRemoveFavorite(place);
@@ -299,8 +347,8 @@ public final class MainActivity extends Activity {
 
     private View buildTabs() {
         LinearLayout tabs = new LinearLayout(this);
-        tabs.setPadding(dp(4), dp(4), dp(4), dp(4));
-        tabs.setBackground(rounded(Color.rgb(232, 239, 242), 14));
+        tabs.setPadding(dp(3), dp(3), dp(3), dp(3));
+        tabs.setBackground(rounded(Color.rgb(226, 235, 239), 15));
         TextView today = tabLabel("Hoje", !dailyTab);
         TextView days = tabLabel("15 dias", dailyTab);
         tabs.addView(today, new LinearLayout.LayoutParams(0, dp(38), 1));
@@ -312,58 +360,45 @@ public final class MainActivity extends Activity {
 
     private void buildHourlyForecast(WeatherSnapshot snapshot) {
         List<WeatherSnapshot.Hourly> hours = visibleHours(snapshot);
-        page.addView(sectionHeading("Hora a hora", "Até o fim do dia local"), margins(-1, -2, 0, 0, 0, 2));
-        page.addView(label("Temperatura em linha · precipitação em barras", 12, MUTED, false), margins(-1, -2, 0, 0, 0, 6));
+        page.addView(sectionHeading("Hora a hora", "Até o fim do dia local"), margins(-1, -2, 0, 0, 0, 3));
+        page.addView(label("Temperatura °C · chuva mm · chance %", 11, MUTED, false), margins(-1, -2, 0, 0, 0, 4));
         if (hours.isEmpty()) {
             page.addView(infoCard("A API ainda não trouxe as horas restantes de hoje."), margins(-1, -2, 0, 0, 0, 8));
             return;
         }
         if (selectedHour < 0 || selectedHour >= hours.size()) selectedHour = 0;
         WeatherChartView chart = new WeatherChartView(this);
-        int width = Math.max(getResources().getDisplayMetrics().widthPixels - dp(36), dp(40) + hours.size() * dp(62));
+        int width = Math.max(getResources().getDisplayMetrics().widthPixels - dp(32), dp(40) + hours.size() * dp(54));
         chart.setHourly(hours, selectedHour);
         chart.setSelectionListener(index -> { selectedHour = index; renderPage(); });
-        HorizontalScrollView chartScroller = chartScroller(chart, width, dp(238));
-        page.addView(chartScroller, margins(-1, dp(238), 0, 0, 0, 8));
+        HorizontalScrollView chartScroller = chartScroller(chart, width, dp(210));
+        page.addView(chartScroller, margins(-1, dp(210), 0, 0, 0, 5));
         WeatherSnapshot.Hourly selected = hours.get(selectedHour);
-        page.addView(sectionHeading("Detalhes · " + shortTime(selected.time), "Previsão para esta hora"), margins(-1, -2, 0, 8, 0, 6));
+        page.addView(sectionHeading("Detalhes · " + shortTime(selected.time), "Previsão para esta hora"), margins(-1, -2, 0, 2, 0, 4));
         page.addView(metricRow(
                 metric("Temperatura", value(selected.temperature, 0, "°"), "sensação " + value(selected.feelsLike, 0, "°")),
-                metric("Umidade", value(selected.humidity, 0, "%"), "relativa")), margins(-1, -2, 0, 0, 0, 7));
+                metric("Umidade", value(selected.humidity, 0, "%"), "relativa")), margins(-1, -2, 0, 0, 0, 5));
         page.addView(metricRow(
                 metric("Precipitação", value(selected.precipitation, 1, " mm"), "nesta hora"),
                 metric("Probabilidade", value(selected.precipitationProbability, 0, "%"), "de precipitação")),
-                margins(-1, -2, 0, 0, 0, 12));
-        page.addView(buildHourlyStrip(hours), margins(-1, dp(116), 0, 0, 0, 14));
+                margins(-1, -2, 0, 0, 0, 8));
+        page.addView(buildHourlyStrip(hours), margins(-1, dp(104), 0, 0, 0, 8));
     }
 
     private void buildDailyForecast(WeatherSnapshot snapshot) {
         List<WeatherSnapshot.Daily> days = snapshot.daily;
-        page.addView(sectionHeading("Próximos 15 dias", "Datas no fuso de " + snapshot.place.name), margins(-1, -2, 0, 0, 0, 2));
-        page.addView(label("Faixa de temperatura · chuva em mm e probabilidade", 12, MUTED, false), margins(-1, -2, 0, 0, 0, 6));
+        page.addView(sectionHeading("Próximos 15 dias", "Toque em um dia para abrir os detalhes"), margins(-1, -2, 0, 0, 0, 5));
         if (days.isEmpty()) {
-            page.addView(infoCard("A previsão diária não está disponível agora."), margins(-1, -2, 0, 0, 0, 8));
+            page.addView(infoCard("A previsão diária não está disponível agora."), margins(-1, -2, 0, 0, 0, 6));
             return;
         }
-        if (selectedDay < 0 || selectedDay >= days.size()) selectedDay = 0;
+        if (selectedDay >= days.size()) selectedDay = -1;
         WeatherChartView chart = new WeatherChartView(this);
-        int width = Math.max(getResources().getDisplayMetrics().widthPixels - dp(36), dp(40) + days.size() * dp(68));
+        int width = Math.max(getResources().getDisplayMetrics().widthPixels - dp(32), dp(40) + days.size() * dp(62));
         chart.setDaily(days, selectedDay);
-        chart.setSelectionListener(index -> { selectedDay = index; renderPage(); });
-        page.addView(chartScroller(chart, width, dp(210)), margins(-1, dp(210), 0, 0, 0, 8));
-        WeatherSnapshot.Daily selected = days.get(selectedDay);
-        page.addView(sectionHeading("Detalhes · " + dateLabel(selected.date), "Previsão do dia"), margins(-1, -2, 0, 8, 0, 6));
-        page.addView(metricRow(
-                metric("Temperatura", value(selected.minTemperature, 0, "°") + " / " + value(selected.maxTemperature, 0, "°"), "mínima / máxima"),
-                metric("Sensação", value(selected.minFeelsLike, 0, "°") + " / " + value(selected.maxFeelsLike, 0, "°"), "mínima / máxima")), margins(-1, -2, 0, 0, 0, 7));
-        page.addView(metricRow(
-                metric("Precipitação", value(selected.precipitation, 1, " mm"), "total do dia"),
-                metric("Probabilidade", value(selected.precipitationProbability, 0, "%"), "máxima no dia")), margins(-1, -2, 0, 0, 0, 7));
-        page.addView(metricRow(
-                metric("Umidade média", value(selected.meanHumidity, 0, "%"), "ao longo do dia"),
-                metric("Condição", weatherIcon(selected.weatherCode), condition(selected.weatherCode))),
-                margins(-1, -2, 0, 0, 0, 12));
-        page.addView(buildDailyList(days), margins(-1, -2, 0, 0, 0, 14));
+        chart.setSelectionListener(index -> toggleDailyDay(index));
+        page.addView(chartScroller(chart, width, dp(166)), margins(-1, dp(166), 0, 0, 0, 6));
+        page.addView(buildDailyList(days), margins(-1, -2, 0, 0, 0, 8));
     }
 
     private View buildHourlyStrip(List<WeatherSnapshot.Hourly> hours) {
@@ -377,12 +412,12 @@ public final class MainActivity extends Activity {
             item.setPadding(dp(10), dp(9), dp(10), dp(9));
             item.setGravity(Gravity.CENTER);
             item.addView(label(shortTime(hour.time), 11, MUTED, true), wrapWrap());
-            item.addView(label(weatherIcon(hour.weatherCode), 20, BLUE, false), margins(-2, -2, 2, 2, 0, 0));
-            item.addView(label(value(hour.temperature, 0, "°"), 17, INK, true), wrapWrap());
+            item.addView(label(weatherIcon(hour.weatherCode), 19, BLUE, false), margins(-2, -2, 2, 1, 0, 0));
+            item.addView(label(value(hour.temperature, 0, "°"), 16, INK, true), wrapWrap());
             item.addView(label(value(hour.precipitation, 1, " mm"), 10, RAIN, true), wrapWrap());
             item.addView(label(value(hour.precipitationProbability, 0, "%"), 10, MUTED, false), wrapWrap());
             item.setOnClickListener(v -> { selectedHour = index; renderPage(); });
-            row.addView(item, margins(dp(76), dp(108), 0, 0, 7, 0));
+            row.addView(item, margins(dp(72), dp(96), 0, 0, 6, 0));
         }
         horizontal.addView(row, new HorizontalScrollView.LayoutParams(-2, -1));
         return horizontal;
@@ -391,35 +426,99 @@ public final class MainActivity extends Activity {
     private View buildDailyList(List<WeatherSnapshot.Daily> days) {
         LinearLayout list = new LinearLayout(this);
         list.setOrientation(LinearLayout.VERTICAL);
+        dailyForecastRows.clear();
         for (int i = 0; i < days.size(); i++) {
             final int index = i;
             WeatherSnapshot.Daily day = days.get(i);
+            boolean expanded = i == selectedDay;
+            LinearLayout item = new LinearLayout(this);
+            item.setOrientation(LinearLayout.VERTICAL);
+            item.setPadding(dp(11), dp(3), dp(11), expanded ? dp(8) : dp(3));
+            item.setBackground(rounded(expanded ? 0xFFE8F4F9 : Color.WHITE, 16));
+
             LinearLayout row = new LinearLayout(this);
             row.setGravity(Gravity.CENTER_VERTICAL);
-            row.setPadding(dp(12), dp(10), dp(12), dp(10));
-            row.setBackground(rounded(i == selectedDay ? PALE_BLUE : Color.WHITE, 14));
+            row.setMinimumHeight(dp(54));
             LinearLayout date = new LinearLayout(this);
             date.setOrientation(LinearLayout.VERTICAL);
-            date.addView(label(dateLabel(day.date), 13, INK, true), wrapWrap());
-            date.addView(label(shortWeekday(day.date), 10, MUTED, false), wrapWrap());
-            row.addView(date, new LinearLayout.LayoutParams(dp(66), -2));
-            row.addView(label(weatherIcon(day.weatherCode), 22, BLUE, false), margins(dp(30), -2, 5, 0, 3, 0));
+            String weekday = i == 0 ? "Hoje" : shortWeekday(day.date);
+            if (weekday.length() > 3 && i != 0) weekday = weekday.substring(0, 3);
+            date.addView(label(weekday, 11, INK, true), wrapWrap());
+            date.addView(label(compactDateLabel(day.date), 10, MUTED, false), wrapWrap());
+            row.addView(date, new LinearLayout.LayoutParams(dp(62), -2));
+            TextView icon = label(weatherIcon(day.weatherCode), 21, BLUE, false);
+            icon.setGravity(Gravity.CENTER);
+            row.addView(icon, margins(dp(30), dp(38), 0, 0, 4, 0));
             LinearLayout temps = new LinearLayout(this);
             temps.setOrientation(LinearLayout.VERTICAL);
-            temps.setGravity(Gravity.CENTER);
-            temps.addView(label(value(day.maxTemperature, 0, "°"), 15, INK, true), wrapWrap());
-            temps.addView(label(value(day.minTemperature, 0, "°"), 12, MUTED, false), wrapWrap());
-            row.addView(temps, new LinearLayout.LayoutParams(dp(48), -2));
-            TextView rain = label(value(day.precipitationProbability, 0, "%") + "\n" + value(day.precipitation, 1, " mm"), 11, RAIN, true);
-            rain.setGravity(Gravity.CENTER);
-            row.addView(rain, new LinearLayout.LayoutParams(dp(57), -2));
-            TextView humidity = label(value(day.meanHumidity, 0, "%") + "\numid.", 10, MUTED, false);
-            humidity.setGravity(Gravity.CENTER);
-            row.addView(humidity, new LinearLayout.LayoutParams(dp(50), -2));
-            row.setOnClickListener(v -> { selectedDay = index; renderPage(); });
-            list.addView(row, margins(-1, -2, 0, 0, 0, 6));
+            temps.setGravity(Gravity.CENTER_VERTICAL);
+            TextView highLow = label(value(day.maxTemperature, 0, "°") + " / "
+                    + value(day.minTemperature, 0, "°"), 13, INK, true);
+            highLow.setMaxLines(1);
+            temps.addView(highLow, wrapWrap());
+            temps.addView(label("máx. / mín.", 10, MUTED, false), wrapWrap());
+            row.addView(temps, new LinearLayout.LayoutParams(0, -2, 1));
+
+            LinearLayout rain = new LinearLayout(this);
+            rain.setOrientation(LinearLayout.VERTICAL);
+            rain.setGravity(Gravity.CENTER_VERTICAL | Gravity.END);
+            rain.addView(label(value(day.precipitationProbability, 0, "%"), 12, RAIN, true), wrapWrap());
+            rain.addView(label(value(day.precipitation, 1, " mm"), 10, MUTED, false), wrapWrap());
+            row.addView(rain, new LinearLayout.LayoutParams(dp(52), -2));
+
+            TextView disclosure = label(expanded ? "⌃" : "⌄", 18, BLUE, true);
+            disclosure.setGravity(Gravity.CENTER);
+            row.addView(disclosure, size(dp(22), dp(44)));
+            row.setContentDescription((expanded ? "Fechar detalhes de " : "Ver detalhes de ")
+                    + dateLabel(day.date) + ", máxima " + value(day.maxTemperature, 0, " graus")
+                    + ", mínima " + value(day.minTemperature, 0, " graus")
+                    + ", chuva " + value(day.precipitationProbability, 0, " por cento"));
+            row.setOnClickListener(v -> toggleDailyDay(index));
+            item.addView(row, matchWrap());
+            if (expanded) item.addView(buildDailyDetails(day), margins(-1, -2, 0, 1, 0, 0));
+            dailyForecastRows.add(item);
+            list.addView(item, margins(-1, -2, 0, 0, 0, 5));
         }
         return list;
+    }
+
+    private View buildDailyDetails(WeatherSnapshot.Daily day) {
+        LinearLayout details = new LinearLayout(this);
+        details.setOrientation(LinearLayout.VERTICAL);
+        View divider = new View(this);
+        divider.setBackgroundColor(0xFFD2E5ED);
+        details.addView(divider, margins(-1, dp(1), 0, 1, 0, 8));
+        details.addView(dailyDetailRow(
+                dailyDetail("Sensação térmica", value(day.minFeelsLike, 0, "°") + " / "
+                        + value(day.maxFeelsLike, 0, "°")),
+                dailyDetail("Umidade média", value(day.meanHumidity, 0, "%"))), margins(-1, -2, 0, 0, 0, 8));
+        details.addView(dailyDetailRow(
+                dailyDetail("Precipitação", value(day.precipitation, 1, " mm")),
+                dailyDetail("Chance de chuva", value(day.precipitationProbability, 0, "%"))), matchWrap());
+        details.addView(label(weatherIcon(day.weatherCode) + "  " + condition(day.weatherCode), 12, MUTED, false),
+                margins(-1, -2, 0, 8, 0, 0));
+        return details;
+    }
+
+    private View dailyDetailRow(View left, View right) {
+        LinearLayout row = new LinearLayout(this);
+        row.addView(left, new LinearLayout.LayoutParams(0, -2, 1));
+        row.addView(right, new LinearLayout.LayoutParams(0, -2, 1));
+        return row;
+    }
+
+    private View dailyDetail(String title, String value) {
+        LinearLayout column = new LinearLayout(this);
+        column.setOrientation(LinearLayout.VERTICAL);
+        column.addView(label(title, 10, MUTED, false), wrapWrap());
+        column.addView(label(value, 14, INK, true), margins(-1, -2, 0, 2, 0, 0));
+        return column;
+    }
+
+    private void toggleDailyDay(int index) {
+        selectedDay = selectedDay == index ? -1 : index;
+        pendingDailyScroll = index;
+        renderPage();
     }
 
     private View buildAttribution() {
@@ -933,6 +1032,14 @@ public final class MainActivity extends Activity {
         } catch (Exception e) { return iso; }
     }
 
+    private String compactDateLabel(String iso) {
+        try {
+            SimpleDateFormat in = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            Date date = in.parse(iso);
+            return new SimpleDateFormat("d MMM", new Locale("pt", "BR")).format(date);
+        } catch (Exception e) { return iso; }
+    }
+
     private String shortWeekday(String iso) {
         try {
             SimpleDateFormat in = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
@@ -980,9 +1087,9 @@ public final class MainActivity extends Activity {
 
     private LinearLayout metric(String title, String value, String detail) {
         LinearLayout box = verticalCard(0xFFF6FAFC);
-        box.setPadding(dp(12), dp(11), dp(10), dp(10));
-        box.addView(label(title.toUpperCase(new Locale("pt", "BR")), 9, MUTED, true), wrapWrap());
-        box.addView(label(value, 18, INK, true), margins(-1, -2, 0, 4, 0, 0));
+        box.setPadding(dp(10), dp(9), dp(10), dp(8));
+        box.addView(label(title.toUpperCase(new Locale("pt", "BR")), 10, MUTED, true), wrapWrap());
+        box.addView(label(value, 17, INK, true), margins(-1, -2, 0, 3, 0, 0));
         box.addView(label(detail, 10, MUTED, false), wrapWrap());
         return box;
     }
@@ -990,14 +1097,18 @@ public final class MainActivity extends Activity {
     private LinearLayout metricRow(View left, View right) {
         LinearLayout row = new LinearLayout(this);
         row.addView(left, new LinearLayout.LayoutParams(0, -2, 1));
-        row.addView(right, margins(0, -2, 7, 0, 0, 0));
+        LinearLayout.LayoutParams rightParams = new LinearLayout.LayoutParams(0, -2, 1);
+        rightParams.setMargins(dp(6), 0, 0, 0);
+        row.addView(right, rightParams);
         return row;
     }
 
     private LinearLayout metricRow(View left, View middle, View right) {
         LinearLayout row = new LinearLayout(this);
         row.addView(left, new LinearLayout.LayoutParams(0, -2, 1));
-        row.addView(middle, margins(0, -2, 5, 0, 5, 0));
+        LinearLayout.LayoutParams middleParams = new LinearLayout.LayoutParams(0, -2, 1);
+        middleParams.setMargins(dp(5), 0, dp(5), 0);
+        row.addView(middle, middleParams);
         row.addView(right, new LinearLayout.LayoutParams(0, -2, 1));
         return row;
     }
@@ -1005,8 +1116,8 @@ public final class MainActivity extends Activity {
     private View sectionHeading(String title, String subtitle) {
         LinearLayout column = new LinearLayout(this);
         column.setOrientation(LinearLayout.VERTICAL);
-        column.addView(label(title, 18, INK, true), wrapWrap());
-        column.addView(label(subtitle, 11, MUTED, false), margins(-1, -2, 0, 2, 0, 0));
+        column.addView(label(title, 16, INK, true), wrapWrap());
+        column.addView(label(subtitle, 11, MUTED, false), margins(-1, -2, 0, 1, 0, 0));
         return column;
     }
 
@@ -1064,8 +1175,8 @@ public final class MainActivity extends Activity {
     private LinearLayout verticalCard(int color) {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(dp(15), dp(14), dp(15), dp(14));
-        card.setBackground(rounded(color, 20));
+        card.setPadding(dp(13), dp(11), dp(13), dp(11));
+        card.setBackground(rounded(color, 18));
         return card;
     }
 
@@ -1083,6 +1194,16 @@ public final class MainActivity extends Activity {
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(width, height);
         params.setMargins(dp(left), dp(top), dp(right), dp(bottom));
         return params;
+    }
+    private int topInScrollContent(View target) {
+        int top = target.getTop();
+        android.view.ViewParent parent = target.getParent();
+        while (parent instanceof View && parent != scrollView) {
+            View parentView = (View) parent;
+            top += parentView.getTop();
+            parent = parentView.getParent();
+        }
+        return top;
     }
     private int dp(float value) { return (int) (value * getResources().getDisplayMetrics().density + 0.5f); }
 

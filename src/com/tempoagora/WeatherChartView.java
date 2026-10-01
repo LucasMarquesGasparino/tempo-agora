@@ -2,6 +2,7 @@ package com.tempoagora;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
@@ -21,10 +22,12 @@ public final class WeatherChartView extends View {
     private static final int GRID = 0xFFE6EDF0;
     private static final int TEMP = 0xFFE07838;
     private static final int RAIN = 0xFF339DC5;
+    private static final int CHANCE = 0xFF7556B5;
     private static final int SELECTED = 0xFF177FAE;
 
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path path = new Path();
+    private final Path chancePath = new Path();
     private final RectF rect = new RectF();
     private final float density;
     private final float textScale;
@@ -108,11 +111,13 @@ public final class WeatherChartView extends View {
             canvas.drawLine(left, y, right, y, paint);
         }
         paint.setStyle(Paint.Style.FILL);
-        drawText(canvas, Math.round(max) + "°", dp(2), tempTop + dp(4), MUTED, 9);
-        drawText(canvas, Math.round(min) + "°", dp(2), tempBottom, MUTED, 9);
+        drawText(canvas, Math.round(max) + "°", dp(2), tempTop + dp(4), MUTED, 10);
+        drawText(canvas, Math.round(min) + "°", dp(2), tempBottom, MUTED, 10);
 
         path.reset();
+        chancePath.reset();
         boolean started = false;
+        boolean chanceStarted = false;
         for (int i = 0; i < count; i++) {
             WeatherSnapshot.Hourly hour = hours.get(i);
             float x = left + cell * (i + 0.5f);
@@ -127,23 +132,40 @@ public final class WeatherChartView extends View {
                 float y = tempBottom - (float) (hour.temperature - min) / span * (tempBottom - tempTop);
                 if (!started) { path.moveTo(x, y); started = true; } else path.lineTo(x, y);
             }
+            if (valid(hour.precipitationProbability)) {
+                float y = rainBottom - (float) (hour.precipitationProbability / 100.0) * (rainBottom - rainTop);
+                if (!chanceStarted) { chancePath.moveTo(x, y); chanceStarted = true; }
+                else chancePath.lineTo(x, y);
+            }
         }
         paint.setColor(TEMP); paint.setStyle(Paint.Style.STROKE); paint.setStrokeWidth(dp(2.6f));
         paint.setStrokeCap(Paint.Cap.ROUND); paint.setStrokeJoin(Paint.Join.ROUND);
         canvas.drawPath(path, paint);
+        paint.setColor(CHANCE); paint.setStrokeWidth(dp(1.8f));
+        paint.setPathEffect(new DashPathEffect(new float[]{dp(4), dp(3)}, 0));
+        canvas.drawPath(chancePath, paint);
+        paint.setPathEffect(null);
         paint.setStyle(Paint.Style.FILL);
         for (int i = 0; i < count; i++) {
             WeatherSnapshot.Hourly hour = hours.get(i);
-            if (!valid(hour.temperature)) continue;
             float x = left + cell * (i + 0.5f);
-            float y = tempBottom - (float) (hour.temperature - min) / span * (tempBottom - tempTop);
-            paint.setColor(i == selected ? SELECTED : TEMP);
-            canvas.drawCircle(x, y, dp(i == selected ? 4 : 2.5f), paint);
-            if (i % 3 == 0 || i == count - 1) {
-                String time = hour.time.length() >= 16 ? hour.time.substring(11, 16) : "";
-                drawCentered(canvas, time, x, getHeight() - dp(8), MUTED, 9);
+            if (valid(hour.temperature)) {
+                float y = tempBottom - (float) (hour.temperature - min) / span * (tempBottom - tempTop);
+                paint.setColor(i == selected ? SELECTED : TEMP);
+                canvas.drawCircle(x, y, dp(i == selected ? 4 : 2.5f), paint);
+                if (i % 3 == 0 || i == count - 1) {
+                    String time = hour.time.length() >= 16 ? hour.time.substring(11, 16) : "";
+                    drawCentered(canvas, time, x, getHeight() - dp(8), MUTED, 10);
+                }
+            }
+            if (valid(hour.precipitationProbability)) {
+                float chanceY = rainBottom - (float) (hour.precipitationProbability / 100.0) * (rainBottom - rainTop);
+                paint.setColor(CHANCE);
+                canvas.drawCircle(x, chanceY, dp(i == selected ? 4 : 2.6f), paint);
             }
         }
+        drawText(canvas, "100%", right - dp(33), rainTop - dp(2), CHANCE, 9);
+        drawText(canvas, "0%", right - dp(22), rainBottom, CHANCE, 9);
         drawSelection(canvas, count, left, right, top, bottom);
     }
 
@@ -163,14 +185,16 @@ public final class WeatherChartView extends View {
         float rainTop = top + plotHeight * 0.74f;
         float rainBottom = bottom - dp(10);
         float cell = (right - left) / count;
+        chancePath.reset();
+        boolean chanceStarted = false;
         paint.setColor(GRID); paint.setStrokeWidth(dp(1)); paint.setStyle(Paint.Style.STROKE);
         for (int i = 0; i < 4; i++) {
             float y = tempTop + (tempBottom - tempTop) * i / 3f;
             canvas.drawLine(left, y, right, y, paint);
         }
         paint.setStyle(Paint.Style.FILL);
-        drawText(canvas, Math.round(max) + "°", dp(2), tempTop + dp(4), MUTED, 9);
-        drawText(canvas, Math.round(min) + "°", dp(2), tempBottom, MUTED, 9);
+        drawText(canvas, Math.round(max) + "°", dp(2), tempTop + dp(4), MUTED, 10);
+        drawText(canvas, Math.round(min) + "°", dp(2), tempBottom, MUTED, 10);
         float rangeWidth = Math.min(dp(22), cell * 0.42f);
         for (int i = 0; i < count; i++) {
             WeatherSnapshot.Daily day = days.get(i);
@@ -191,11 +215,32 @@ public final class WeatherChartView extends View {
                 rect.set(x - barWidth / 2, rainBottom - height, x + barWidth / 2, rainBottom);
                 paint.setColor(RAIN); canvas.drawRoundRect(rect, dp(4), dp(4), paint);
             }
+            if (valid(day.precipitationProbability)) {
+                float chanceY = rainBottom - (float) (day.precipitationProbability / 100.0) * (rainBottom - rainTop);
+                if (!chanceStarted) { chancePath.moveTo(x, chanceY); chanceStarted = true; }
+                else chancePath.lineTo(x, chanceY);
+            }
             if (i % 2 == 0 || i == count - 1) {
                 String date = day.date.length() >= 10 ? day.date.substring(5).replace('-', '/') : day.date;
-                drawCentered(canvas, date, x, getHeight() - dp(8), MUTED, 8);
+                drawCentered(canvas, date, x, getHeight() - dp(8), MUTED, 9);
             }
         }
+        paint.setColor(CHANCE); paint.setStyle(Paint.Style.STROKE); paint.setStrokeWidth(dp(1.8f));
+        paint.setStrokeCap(Paint.Cap.ROUND); paint.setStrokeJoin(Paint.Join.ROUND);
+        paint.setPathEffect(new DashPathEffect(new float[]{dp(4), dp(3)}, 0));
+        canvas.drawPath(chancePath, paint);
+        paint.setPathEffect(null);
+        paint.setStyle(Paint.Style.FILL);
+        for (int i = 0; i < count; i++) {
+            WeatherSnapshot.Daily day = days.get(i);
+            if (!valid(day.precipitationProbability)) continue;
+            float x = left + cell * (i + 0.5f);
+            float chanceY = rainBottom - (float) (day.precipitationProbability / 100.0) * (rainBottom - rainTop);
+            paint.setColor(CHANCE);
+            canvas.drawCircle(x, chanceY, dp(i == selected ? 4 : 2.6f), paint);
+        }
+        drawText(canvas, "100%", right - dp(33), rainTop - dp(2), CHANCE, 9);
+        drawText(canvas, "0%", right - dp(22), rainBottom, CHANCE, 9);
         drawSelection(canvas, count, left, right, top, bottom);
     }
 
@@ -210,13 +255,16 @@ public final class WeatherChartView extends View {
 
     private void drawLegend(Canvas canvas, float left, float baseline) {
         paint.setColor(TEMP); paint.setStyle(Paint.Style.STROKE); paint.setStrokeWidth(dp(2.5f));
-        canvas.drawLine(left, baseline - dp(3), left + dp(16), baseline - dp(3), paint);
+        canvas.drawLine(left, baseline - dp(3), left + dp(12), baseline - dp(3), paint);
         paint.setStyle(Paint.Style.FILL);
-        drawText(canvas, "temperatura °C", left + dp(22), baseline, INK, 9);
+        drawText(canvas, "°C", left + dp(17), baseline, INK, 10);
         paint.setColor(RAIN);
-        rect.set(left + dp(112), baseline - dp(10), left + dp(120), baseline - dp(2));
+        rect.set(left + dp(43), baseline - dp(10), left + dp(51), baseline - dp(2));
         canvas.drawRoundRect(rect, dp(2), dp(2), paint);
-        drawText(canvas, "precipitação mm", left + dp(126), baseline, INK, 9);
+        drawText(canvas, "mm", left + dp(56), baseline, INK, 10);
+        paint.setColor(CHANCE);
+        canvas.drawCircle(left + dp(91), baseline - dp(4), dp(3), paint);
+        drawText(canvas, "chance %", left + dp(99), baseline, INK, 10);
     }
 
     @Override public boolean onTouchEvent(android.view.MotionEvent event) {
