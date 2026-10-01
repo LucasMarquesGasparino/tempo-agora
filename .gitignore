@@ -1,0 +1,16 @@
+build/
+gen/
+bin/
+out/
+.gradle/
+*.apk
+*.aab
+*.dex
+*.class
+*.keystore
+*.jks
+*.p12
+local.properties
+.idea/
+.DS_Store
+*.log
