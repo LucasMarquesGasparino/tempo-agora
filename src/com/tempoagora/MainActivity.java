@@ -74,6 +74,7 @@ public final class MainActivity extends Activity {
     private RefreshScrollView scrollView;
     private LinearLayout page;
     private boolean dailyTab;
+    private boolean tomorrowTab;
     private boolean refreshing;
     private boolean refreshRequestedAgain;
     private boolean manualSelectionInSession;
@@ -354,21 +355,27 @@ public final class MainActivity extends Activity {
         LinearLayout tabs = new LinearLayout(this);
         tabs.setPadding(dp(3), dp(3), dp(3), dp(3));
         tabs.setBackground(rounded(Color.rgb(226, 235, 239), 15));
-        TextView today = tabLabel("Hoje", !dailyTab);
+        TextView today = tabLabel("Hoje", !dailyTab && !tomorrowTab);
+        TextView tomorrow = tabLabel("Amanhã", tomorrowTab);
         TextView days = tabLabel("15 dias", dailyTab);
         tabs.addView(today, new LinearLayout.LayoutParams(0, dp(38), 1));
+        tabs.addView(tomorrow, new LinearLayout.LayoutParams(0, dp(38), 1));
         tabs.addView(days, new LinearLayout.LayoutParams(0, dp(38), 1));
-        today.setOnClickListener(v -> { dailyTab = false; selectedHour = -1; renderPage(); });
-        days.setOnClickListener(v -> { dailyTab = true; selectedDay = -1; renderPage(); });
+        today.setOnClickListener(v -> { dailyTab = false; tomorrowTab = false; selectedHour = -1; renderPage(); });
+        tomorrow.setOnClickListener(v -> { dailyTab = false; tomorrowTab = true; selectedHour = -1; renderPage(); });
+        days.setOnClickListener(v -> { dailyTab = true; tomorrowTab = false; selectedDay = -1; renderPage(); });
         return tabs;
     }
 
     private void buildHourlyForecast(WeatherSnapshot snapshot) {
         List<WeatherSnapshot.Hourly> hours = visibleHours(snapshot);
-        page.addView(sectionHeading("Hora a hora", "Até o fim do dia local"), margins(-1, -2, 0, 0, 0, 3));
+        page.addView(sectionHeading(tomorrowTab ? "Amanhã · hora a hora" : "Hora a hora",
+                tomorrowTab ? "Previsão completa · hora local" : "Até o fim do dia local"),
+                margins(-1, -2, 0, 0, 0, 3));
         page.addView(label("Temperatura °C · chuva mm · chance %", 11, MUTED, false), margins(-1, -2, 0, 0, 0, 4));
         if (hours.isEmpty()) {
-            page.addView(infoCard("A API ainda não trouxe as horas restantes de hoje."), margins(-1, -2, 0, 0, 0, 8));
+            page.addView(infoCard(tomorrowTab ? "A previsão por hora de amanhã não está disponível agora."
+                    : "A API ainda não trouxe as horas restantes de hoje."), margins(-1, -2, 0, 0, 0, 8));
             return;
         }
         if (selectedHour < 0 || selectedHour >= hours.size()) selectedHour = 0;
@@ -387,7 +394,7 @@ public final class MainActivity extends Activity {
                 metric("Precipitação", value(selected.precipitation, 1, " mm"), "nesta hora"),
                 metric("Probabilidade", value(selected.precipitationProbability, 0, "%"), "de precipitação")),
                 margins(-1, -2, 0, 0, 0, 8));
-        page.addView(buildHourlyStrip(hours), margins(-1, dp(120), 0, 0, 0, 8));
+        page.addView(buildHourlyStrip(hours), margins(-1, dp(128), 0, 0, 0, 8));
     }
 
     private void buildDailyForecast(WeatherSnapshot snapshot) {
@@ -414,7 +421,7 @@ public final class MainActivity extends Activity {
             final int index = i;
             WeatherSnapshot.Hourly hour = hours.get(i);
             LinearLayout item = verticalCard(i == selectedHour ? PALE_BLUE : Color.WHITE);
-            item.setPadding(dp(10), dp(9), dp(10), dp(9));
+            item.setPadding(dp(9), dp(5), dp(9), dp(5));
             item.setGravity(Gravity.CENTER);
             item.addView(label(shortTime(hour.time), 11, MUTED, true), wrapWrap());
             item.addView(label(weatherIcon(hour.weatherCode), 19, BLUE, false), margins(-2, -2, 2, 1, 0, 0));
@@ -422,7 +429,7 @@ public final class MainActivity extends Activity {
             item.addView(label(value(hour.precipitation, 1, " mm"), 10, RAIN, true), wrapWrap());
             item.addView(label(value(hour.precipitationProbability, 0, "%"), 10, MUTED, false), wrapWrap());
             item.setOnClickListener(v -> { selectedHour = index; renderPage(); });
-            row.addView(item, margins(dp(72), dp(112), 0, 0, 6, 0));
+            row.addView(item, margins(dp(72), dp(120), 0, 0, 6, 0));
         }
         horizontal.addView(row, new HorizontalScrollView.LayoutParams(-2, -1));
         return horizontal;
@@ -890,6 +897,7 @@ public final class MainActivity extends Activity {
         activePlace = place;
         manualSelectionInSession = !place.currentLocation;
         dailyTab = false;
+        tomorrowTab = false;
         selectedHour = -1;
         selectedDay = -1;
         if (!place.currentLocation) preferences.edit().putString("last_manual", place.toJson().toString()).apply();
@@ -1087,6 +1095,10 @@ public final class MainActivity extends Activity {
     }
 
     private List<WeatherSnapshot.Hourly> visibleHours(WeatherSnapshot snapshot) {
+        if (tomorrowTab) {
+            if (snapshot.daily.size() < 2) return new ArrayList<>();
+            return hoursForDate(snapshot, snapshot.daily.get(1).date);
+        }
         List<WeatherSnapshot.Hourly> result = new ArrayList<>();
         String now = snapshot.currentTime;
         if (now == null || now.length() < 13) now = localNow(snapshot.timezone);
