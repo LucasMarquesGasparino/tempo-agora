@@ -211,22 +211,25 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
     }
 
     private static List<WeatherSnapshot.Hourly> todayHours(WeatherSnapshot snapshot) {
-        List<WeatherSnapshot.Hourly> result = new ArrayList<>();
+        List<WeatherSnapshot.Hourly> available = new ArrayList<>();
         String now = snapshot.currentTime;
-        if (now == null || now.length() < 13) return result;
+        if (now == null || now.length() < 13) return available;
         String today = now.substring(0, 10);
         String currentHour = now.substring(0, 13);
         for (WeatherSnapshot.Hourly hour : snapshot.hourly) {
             if (hour.time.length() < 13 || !hour.time.startsWith(today)
                     || hour.time.substring(0, 13).compareTo(currentHour) <= 0) continue;
-            int hourOfDay;
-            try { hourOfDay = Integer.parseInt(hour.time.substring(11, 13)); }
-            catch (NumberFormatException ignored) { continue; }
-            if (hourOfDay % 3 != 0) continue;
             if (!hasValue(hour.temperature) && !hasValue(hour.precipitation)
                     && !hasValue(hour.precipitationProbability)) continue;
-            result.add(hour);
-            if (result.size() == 8) break;
+            available.add(hour);
+        }
+
+        int count = Math.min(8, available.size());
+        List<WeatherSnapshot.Hourly> result = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            int index = count == 1 ? 0
+                    : (int) Math.round((double) i * (available.size() - 1) / (count - 1));
+            result.add(available.get(index));
         }
         return result;
     }
