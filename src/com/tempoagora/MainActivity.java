@@ -3,6 +3,8 @@ package com.tempoagora;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -98,6 +100,7 @@ public final class MainActivity extends Activity {
         if (devicePlace != null) devicePlace = devicePlace.asCurrentLocation();
         activePlace = devicePlace != null ? devicePlace : readPlace("last_manual");
         if (activePlace == null && !favorites.isEmpty()) activePlace = favorites.get(0);
+        persistWidgetPlace();
         loadCachedSnapshots();
         buildShell();
         renderPage();
@@ -188,6 +191,8 @@ public final class MainActivity extends Activity {
         search.setTextSize(13);
         search.setPadding(dp(12), 0, dp(12), 0);
         row.addView(search, margins(-2, dp(42), 0, 0, 6, 0));
+        row.addView(actionButton("▦", "Adicionar widget à tela inicial", this::pinWeatherWidget),
+                margins(dp(42), dp(42), 0, 0, 6, 0));
         row.addView(actionButton(refreshing ? "…" : "↻", "Atualizar clima", () -> refreshWeather(true)), size(dp(42), dp(42)));
         return row;
     }
@@ -398,7 +403,7 @@ public final class MainActivity extends Activity {
         chart.setDaily(days, selectedDay);
         chart.setSelectionListener(index -> toggleDailyDay(index));
         page.addView(chartScroller(chart, width, dp(166)), margins(-1, dp(166), 0, 0, 0, 6));
-        page.addView(buildDailyList(days), margins(-1, -2, 0, 0, 0, 8));
+        page.addView(buildDailyList(snapshot, days), margins(-1, -2, 0, 0, 0, 8));
     }
 
     private View buildHourlyStrip(List<WeatherSnapshot.Hourly> hours) {
@@ -423,7 +428,7 @@ public final class MainActivity extends Activity {
         return horizontal;
     }
 
-    private View buildDailyList(List<WeatherSnapshot.Daily> days) {
+    private View buildDailyList(WeatherSnapshot snapshot, List<WeatherSnapshot.Daily> days) {
         LinearLayout list = new LinearLayout(this);
         list.setOrientation(LinearLayout.VERTICAL);
         dailyForecastRows.clear();
@@ -475,14 +480,14 @@ public final class MainActivity extends Activity {
                     + ", chuva " + value(day.precipitationProbability, 0, " por cento"));
             row.setOnClickListener(v -> toggleDailyDay(index));
             item.addView(row, matchWrap());
-            if (expanded) item.addView(buildDailyDetails(day), margins(-1, -2, 0, 1, 0, 0));
+            if (expanded) item.addView(buildDailyDetails(snapshot, day), margins(-1, -2, 0, 1, 0, 0));
             dailyForecastRows.add(item);
             list.addView(item, margins(-1, -2, 0, 0, 0, 5));
         }
         return list;
     }
 
-    private View buildDailyDetails(WeatherSnapshot.Daily day) {
+    private View buildDailyDetails(WeatherSnapshot snapshot, WeatherSnapshot.Daily day) {
         LinearLayout details = new LinearLayout(this);
         details.setOrientation(LinearLayout.VERTICAL);
         View divider = new View(this);
@@ -497,7 +502,75 @@ public final class MainActivity extends Activity {
                 dailyDetail("Chance de chuva", value(day.precipitationProbability, 0, "%"))), matchWrap());
         details.addView(label(weatherIcon(day.weatherCode) + "  " + condition(day.weatherCode), 12, MUTED, false),
                 margins(-1, -2, 0, 8, 0, 0));
+        List<WeatherSnapshot.Hourly> hours = hoursForDate(snapshot, day.date);
+        details.addView(sectionHeading("Previsão hora a hora",
+                hours.size() + (hours.size() == 1 ? " horário · hora local" : " horários · hora local")),
+                margins(-1, -2, 0, 6, 0, 5));
+        if (hours.isEmpty()) {
+            details.addView(label("Os horários deste dia não estão disponíveis.", 11, MUTED, false),
+                    margins(-1, -2, 0, 0, 0, 3));
+        } else {
+            LinearLayout hourlyRows = new LinearLayout(this);
+            hourlyRows.setOrientation(LinearLayout.VERTICAL);
+            hourlyRows.setPadding(dp(8), dp(2), dp(8), dp(2));
+            hourlyRows.setBackground(rounded(Color.WHITE, 13));
+            for (int i = 0; i < hours.size(); i++) {
+                hourlyRows.addView(dailyHourlyRow(hours.get(i)), matchWrap());
+                if (i < hours.size() - 1) {
+                    View line = new View(this);
+                    line.setBackgroundColor(0xFFE8EFF2);
+                    hourlyRows.addView(line, margins(-1, dp(1), dp(4), 0, dp(4), 0));
+                }
+            }
+            details.addView(hourlyRows, margins(-1, -2, 0, 0, 0, 5));
+        }
         return details;
+    }
+
+    private View dailyHourlyRow(WeatherSnapshot.Hourly hour) {
+        LinearLayout row = new LinearLayout(this);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(2), dp(6), dp(2), dp(6));
+        row.setMinimumHeight(dp(42));
+        row.addView(label(shortTime(hour.time), 11, MUTED, true), size(dp(39), -2));
+        TextView icon = label(weatherIcon(hour.weatherCode), 17, BLUE, false);
+        icon.setGravity(Gravity.CENTER);
+        row.addView(icon, margins(dp(24), dp(28), 0, 0, 5, 0));
+
+        LinearLayout temperatures = new LinearLayout(this);
+        temperatures.setOrientation(LinearLayout.VERTICAL);
+        temperatures.addView(label(value(hour.temperature, 0, "°") + "  ·  sensação "
+                + value(hour.feelsLike, 0, "°"), 11, INK, true), matchWrap());
+        temperatures.addView(label("Umidade " + value(hour.humidity, 0, "%"), 10, MUTED, false), wrapWrap());
+        row.addView(temperatures, new LinearLayout.LayoutParams(0, -2, 1));
+
+        LinearLayout rain = new LinearLayout(this);
+        rain.setOrientation(LinearLayout.VERTICAL);
+        rain.setGravity(Gravity.CENTER_VERTICAL | Gravity.END);
+        rain.addView(label(value(hour.precipitation, 1, " mm"), 11, RAIN, true), wrapWrap());
+        rain.addView(label(value(hour.precipitationProbability, 0, "%") + " chuva", 10, MUTED, false), wrapWrap());
+        row.addView(rain, new LinearLayout.LayoutParams(dp(66), -2));
+        row.setContentDescription(shortTime(hour.time) + ", "
+                + value(hour.temperature, 0, " graus") + ", sensação "
+                + value(hour.feelsLike, 0, " graus") + ", umidade "
+                + value(hour.humidity, 0, " por cento") + ", precipitação "
+                + value(hour.precipitation, 1, " milímetros") + ", chance de chuva "
+                + value(hour.precipitationProbability, 0, " por cento"));
+        return row;
+    }
+
+    private List<WeatherSnapshot.Hourly> hoursForDate(WeatherSnapshot snapshot, String date) {
+        List<WeatherSnapshot.Hourly> result = new ArrayList<>();
+        String now = snapshot.currentTime;
+        if (now == null || now.length() < 13) now = localNow(snapshot.timezone);
+        String today = now.substring(0, 10);
+        String currentHour = now.substring(0, 13);
+        for (WeatherSnapshot.Hourly hour : snapshot.hourly) {
+            if (hour.time.length() < 13 || !hour.time.startsWith(date)) continue;
+            if (date.equals(today) && hour.time.substring(0, 13).compareTo(currentHour) < 0) continue;
+            result.add(hour);
+        }
+        return result;
     }
 
     private View dailyDetailRow(View left, View right) {
@@ -690,6 +763,7 @@ public final class MainActivity extends Activity {
                 if (!manualSelectionInSession && (activePlace == null || activePlace.currentLocation)) {
                     activePlace = place;
                     preferences.edit().putString("last_manual", "").apply();
+                    persistWidgetPlace();
                 }
                 statusMessage = fresh ? "" : "Atualizando a posição atual…";
                 renderPage();
@@ -757,6 +831,7 @@ public final class MainActivity extends Activity {
                         preferences.edit().putString(cacheKey(snapshot.place), snapshot.toJson().toString()).apply();
                         updatePlaceTimezone(snapshot.place);
                     }
+                    WeatherWidgetProvider.refreshViews(MainActivity.this);
                     refreshing = false;
                     statusMessage = "";
                     renderPage();
@@ -805,6 +880,7 @@ public final class MainActivity extends Activity {
         if (devicePlace != null && devicePlace.key().equals(place.key())) {
             preferences.edit().putString("last_current", devicePlace.toJson().toString()).apply();
         }
+        if (activePlace != null && activePlace.key().equals(place.key())) persistWidgetPlace();
         saveFavorites();
     }
 
@@ -817,6 +893,8 @@ public final class MainActivity extends Activity {
         selectedHour = -1;
         selectedDay = -1;
         if (!place.currentLocation) preferences.edit().putString("last_manual", place.toJson().toString()).apply();
+        persistWidgetPlace();
+        WeatherWidgetProvider.refreshViews(this);
         WeatherSnapshot cached = snapshots.get(place.key());
         if (cached == null) cached = readCachedSnapshot(place);
         if (cached != null) snapshots.put(place.key(), cached);
@@ -981,6 +1059,32 @@ public final class MainActivity extends Activity {
     }
 
     private String cacheKey(Place place) { return "weather_" + place.key().replace(',', '_'); }
+
+    private void persistWidgetPlace() {
+        if (preferences != null && activePlace != null) {
+            preferences.edit().putString("widget_place", activePlace.toJson().toString()).apply();
+        }
+    }
+
+    private void pinWeatherWidget() {
+        if (activePlace == null) {
+            Toast.makeText(this, "Escolha uma cidade antes de adicionar o widget.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        persistWidgetPlace();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            AppWidgetManager manager = AppWidgetManager.getInstance(this);
+            if (manager.isRequestPinAppWidgetSupported()) {
+                boolean requested = manager.requestPinAppWidget(
+                        new ComponentName(this, WeatherWidgetProvider.class), null, null);
+                Toast.makeText(this, requested
+                        ? "Confirme a adição do widget na tela inicial."
+                        : "Não foi possível abrir a confirmação do widget.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+        Toast.makeText(this, "Na tela inicial, abra Widgets e arraste o Tempo Agora.", Toast.LENGTH_LONG).show();
+    }
 
     private List<WeatherSnapshot.Hourly> visibleHours(WeatherSnapshot snapshot) {
         List<WeatherSnapshot.Hourly> result = new ArrayList<>();
