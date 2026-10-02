@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -175,8 +176,13 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
         };
 
         List<WeatherSnapshot.Hourly> hours = snapshot == null ? new ArrayList<WeatherSnapshot.Hourly>() : todayHours(snapshot);
+        List<WeatherSnapshot.Daily> days = upcomingDays(snapshot);
         int todayVisibility = hours.isEmpty() ? android.view.View.GONE : android.view.View.VISIBLE;
+        int daysVisibility = days.isEmpty() ? android.view.View.GONE : android.view.View.VISIBLE;
         views.setViewVisibility(R.id.widget_today_title, todayVisibility);
+        views.setViewVisibility(R.id.widget_today_table, todayVisibility);
+        views.setViewVisibility(R.id.widget_days_title, daysVisibility);
+        views.setViewVisibility(R.id.widget_days_table, daysVisibility);
         views.setViewVisibility(R.id.widget_today_columns, todayVisibility);
         for (int i = 0; i < 8; i++) {
             WeatherSnapshot.Hourly hour = i < hours.size() ? hours.get(i) : null;
@@ -190,22 +196,30 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
 
         for (int i = 0; i < 7; i++) {
             int slot = i + 8;
-            WeatherSnapshot.Daily day = snapshot == null || snapshot.daily.size() <= i
-                    ? null : snapshot.daily.get(i);
-            String dayName = "—";
-            if (day != null) {
-                if (i == 0) dayName = "Hoje";
-                else if (i == 1) dayName = "Amanhã";
-                else dayName = shortWeekday(day.date) + " " + day.date.substring(8, 10);
-            }
-            views.setViewVisibility(rows[slot], android.view.View.VISIBLE);
-            if (i < 6) views.setViewVisibility(dividers[slot], android.view.View.VISIBLE);
+            WeatherSnapshot.Daily day = i < days.size() ? days.get(i) : null;
+            String dayName = "";
+            if (day != null) dayName = dailyLabel(snapshot, day);
+            views.setViewVisibility(rows[slot], day == null ? android.view.View.GONE : android.view.View.VISIBLE);
+            if (i < 6) views.setViewVisibility(dividers[slot], i < days.size() - 1 ? android.view.View.VISIBLE : android.view.View.GONE);
             views.setTextViewText(labels[slot], dayName);
-            views.setTextViewText(temperatures[slot], day == null ? "—" : number(day.maxTemperature, 0, "°")
+            views.setTextViewText(temperatures[slot], day == null ? "" : number(day.maxTemperature, 0, "°")
                     + " / " + number(day.minTemperature, 0, "°"));
-            views.setTextViewText(rain[slot], day == null ? "—" : number(day.precipitation, 1, " mm"));
-            views.setTextViewText(probabilities[slot], day == null ? "—" : number(day.precipitationProbability, 0, "%"));
+            views.setTextViewText(rain[slot], day == null ? "" : number(day.precipitation, 1, " mm"));
+            views.setTextViewText(probabilities[slot], day == null ? "" : number(day.precipitationProbability, 0, "%"));
         }
+    }
+
+    private static List<WeatherSnapshot.Daily> upcomingDays(WeatherSnapshot snapshot) {
+        List<WeatherSnapshot.Daily> result = new ArrayList<>();
+        if (snapshot == null) return result;
+        for (int i = 1; i < snapshot.daily.size() && result.size() < 7; i++) {
+            WeatherSnapshot.Daily day = snapshot.daily.get(i);
+            if (day == null || day.date == null || day.date.length() < 10) continue;
+            if (!hasValue(day.maxTemperature) && !hasValue(day.minTemperature)
+                    && !hasValue(day.precipitation) && !hasValue(day.precipitationProbability)) continue;
+            result.add(day);
+        }
+        return result;
     }
 
     private static List<WeatherSnapshot.Hourly> todayHours(WeatherSnapshot snapshot) {
@@ -221,10 +235,32 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
             try { hourOfDay = Integer.parseInt(hour.time.substring(11, 13)); }
             catch (NumberFormatException ignored) { continue; }
             if (hourOfDay % 3 != 0) continue;
+            if (!hasValue(hour.temperature) && !hasValue(hour.precipitation)
+                    && !hasValue(hour.precipitationProbability)) continue;
             result.add(hour);
             if (result.size() == 8) break;
         }
         return result;
+    }
+
+    private static boolean hasValue(double value) {
+        return !Double.isNaN(value) && !Double.isInfinite(value);
+    }
+
+    private static String dailyLabel(WeatherSnapshot snapshot, WeatherSnapshot.Daily day) {
+        if (snapshot.currentTime != null && snapshot.currentTime.length() >= 10) {
+            try {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                TimeZone utc = TimeZone.getTimeZone("UTC");
+                dateFormat.setTimeZone(utc);
+                Date today = dateFormat.parse(snapshot.currentTime.substring(0, 10));
+                Calendar calendar = Calendar.getInstance(utc, Locale.US);
+                calendar.setTime(today);
+                calendar.add(Calendar.DAY_OF_MONTH, 1);
+                if (day.date.equals(dateFormat.format(calendar.getTime()))) return "Amanhã";
+            } catch (Exception ignored) { }
+        }
+        return shortWeekday(day.date) + " " + day.date.substring(8, 10);
     }
 
     private static String shortWeekday(String isoDate) {
