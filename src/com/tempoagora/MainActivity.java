@@ -185,7 +185,7 @@ public final class MainActivity extends Activity {
         LinearLayout row = new LinearLayout(this);
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(0, 0, 0, dp(4));
-        TextView mark = label("Tempo Agora", 19, INK, true);
+        TextView mark = label("Atemporal", 19, INK, true);
         row.addView(mark, new LinearLayout.LayoutParams(0, -2, 1));
         TextView search = actionButton("Buscar", "Buscar cidade", this::openCitySearch);
         search.setTextSize(13);
@@ -387,7 +387,7 @@ public final class MainActivity extends Activity {
                 metric("Precipitação", value(selected.precipitation, 1, " mm"), "nesta hora"),
                 metric("Probabilidade", value(selected.precipitationProbability, 0, "%"), "de precipitação")),
                 margins(-1, -2, 0, 0, 0, 8));
-        page.addView(buildHourlyStrip(hours), margins(-1, dp(104), 0, 0, 0, 8));
+        page.addView(buildHourlyStrip(hours), margins(-1, dp(120), 0, 0, 0, 8));
     }
 
     private void buildDailyForecast(WeatherSnapshot snapshot) {
@@ -422,7 +422,7 @@ public final class MainActivity extends Activity {
             item.addView(label(value(hour.precipitation, 1, " mm"), 10, RAIN, true), wrapWrap());
             item.addView(label(value(hour.precipitationProbability, 0, "%"), 10, MUTED, false), wrapWrap());
             item.setOnClickListener(v -> { selectedHour = index; renderPage(); });
-            row.addView(item, margins(dp(72), dp(96), 0, 0, 6, 0));
+            row.addView(item, margins(dp(72), dp(112), 0, 0, 6, 0));
         }
         horizontal.addView(row, new HorizontalScrollView.LayoutParams(-2, -1));
         return horizontal;
@@ -1083,7 +1083,7 @@ public final class MainActivity extends Activity {
                 return;
             }
         }
-        Toast.makeText(this, "Na tela inicial, abra Widgets e arraste o Tempo Agora.", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Na tela inicial, abra Widgets e arraste o Atemporal.", Toast.LENGTH_LONG).show();
     }
 
     private List<WeatherSnapshot.Hourly> visibleHours(WeatherSnapshot snapshot) {

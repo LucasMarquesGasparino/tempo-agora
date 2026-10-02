@@ -104,6 +104,10 @@ public final class WeatherChartView extends View {
         float rainTop = top + plotHeight * 0.73f;
         float rainBottom = bottom - dp(12);
         float cell = (right - left) / count;
+        int lastHourIndex = count - 1;
+        int previousRegularLabel = (lastHourIndex / 3) * 3;
+        boolean crowdedFinalLabel = lastHourIndex % 3 != 0 && previousRegularLabel < lastHourIndex
+                && (lastHourIndex - previousRegularLabel) * cell < dp(34);
 
         paint.setColor(GRID); paint.setStrokeWidth(dp(1)); paint.setStyle(Paint.Style.STROKE);
         for (int i = 0; i < 4; i++) {
@@ -153,8 +157,8 @@ public final class WeatherChartView extends View {
                 float y = tempBottom - (float) (hour.temperature - min) / span * (tempBottom - tempTop);
                 paint.setColor(i == selected ? SELECTED : TEMP);
                 canvas.drawCircle(x, y, dp(i == selected ? 4 : 2.5f), paint);
-                if (i % 3 == 0 || i == count - 1) {
-                    String time = hour.time.length() >= 16 ? hour.time.substring(11, 16) : "";
+                if ((i % 3 == 0 && !(crowdedFinalLabel && i == previousRegularLabel)) || i == lastHourIndex) {
+                    String time = hour.time.length() >= 13 ? hour.time.substring(11, 13) + "h" : "";
                     drawCentered(canvas, time, x, getHeight() - dp(8), MUTED, 10);
                 }
             }
@@ -221,7 +225,8 @@ public final class WeatherChartView extends View {
                 else chancePath.lineTo(x, chanceY);
             }
             if (i % 2 == 0 || i == count - 1) {
-                String date = day.date.length() >= 10 ? day.date.substring(5).replace('-', '/') : day.date;
+                String date = day.date.length() >= 10
+                        ? day.date.substring(8, 10) + "/" + day.date.substring(5, 7) : day.date;
                 drawCentered(canvas, date, x, getHeight() - dp(8), MUTED, 9);
             }
         }

@@ -71,7 +71,7 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
         WeatherSnapshot snapshot = place == null ? null : readSnapshot(context, place);
         updateDailyForecast(views, snapshot);
 
-        views.setTextViewText(R.id.widget_place, place == null ? "Tempo Agora" : place.name);
+        views.setTextViewText(R.id.widget_place, place == null ? "Atemporal" : place.name);
         views.setTextViewText(R.id.widget_subtitle, place == null ? "Escolha uma cidade no app" : place.subtitle());
         if (snapshot == null) {
             views.setTextViewText(R.id.widget_temperature, "—°");
@@ -80,7 +80,7 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
             views.setTextViewText(R.id.widget_feels, "Sensação —");
             views.setTextViewText(R.id.widget_rain, "Chuva —");
             views.setTextViewText(R.id.widget_humidity, "Umidade —");
-            views.setTextViewText(R.id.widget_updated, "Abrir Tempo Agora");
+            views.setTextViewText(R.id.widget_updated, "Abrir Atemporal");
         } else {
             WeatherSnapshot.Hourly next = nextHour(snapshot);
             views.setTextViewText(R.id.widget_temperature, number(snapshot.currentTemperature, 0, "°"));
@@ -113,18 +113,36 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
     }
 
     private static void updateDailyForecast(RemoteViews views, WeatherSnapshot snapshot) {
-        int[] labels = {R.id.widget_day_1_label, R.id.widget_day_2_label, R.id.widget_day_3_label,
-                R.id.widget_day_4_label, R.id.widget_day_5_label};
-        int[] temperatures = {R.id.widget_day_1_temp, R.id.widget_day_2_temp, R.id.widget_day_3_temp,
-                R.id.widget_day_4_temp, R.id.widget_day_5_temp};
-        int[] rain = {R.id.widget_day_1_rain, R.id.widget_day_2_rain, R.id.widget_day_3_rain,
-                R.id.widget_day_4_rain, R.id.widget_day_5_rain};
-        int[] probabilities = {R.id.widget_day_1_probability, R.id.widget_day_2_probability,
-                R.id.widget_day_3_probability, R.id.widget_day_4_probability, R.id.widget_day_5_probability};
+        int[] labels = {
+                R.id.widget_day_1_label, R.id.widget_day_2_label, R.id.widget_day_3_label, R.id.widget_day_4_label, R.id.widget_day_5_label,
+                R.id.widget_day_6_label, R.id.widget_day_7_label, R.id.widget_day_8_label, R.id.widget_day_9_label, R.id.widget_day_10_label,
+                R.id.widget_day_11_label, R.id.widget_day_12_label, R.id.widget_day_13_label, R.id.widget_day_14_label, R.id.widget_day_15_label
+        };
+        int[] temperatures = {
+                R.id.widget_day_1_temp, R.id.widget_day_2_temp, R.id.widget_day_3_temp, R.id.widget_day_4_temp, R.id.widget_day_5_temp,
+                R.id.widget_day_6_temp, R.id.widget_day_7_temp, R.id.widget_day_8_temp, R.id.widget_day_9_temp, R.id.widget_day_10_temp,
+                R.id.widget_day_11_temp, R.id.widget_day_12_temp, R.id.widget_day_13_temp, R.id.widget_day_14_temp, R.id.widget_day_15_temp
+        };
+        int[] rain = {
+                R.id.widget_day_1_rain, R.id.widget_day_2_rain, R.id.widget_day_3_rain, R.id.widget_day_4_rain, R.id.widget_day_5_rain,
+                R.id.widget_day_6_rain, R.id.widget_day_7_rain, R.id.widget_day_8_rain, R.id.widget_day_9_rain, R.id.widget_day_10_rain,
+                R.id.widget_day_11_rain, R.id.widget_day_12_rain, R.id.widget_day_13_rain, R.id.widget_day_14_rain, R.id.widget_day_15_rain
+        };
+        int[] probabilities = {
+                R.id.widget_day_1_probability, R.id.widget_day_2_probability, R.id.widget_day_3_probability, R.id.widget_day_4_probability, R.id.widget_day_5_probability,
+                R.id.widget_day_6_probability, R.id.widget_day_7_probability, R.id.widget_day_8_probability, R.id.widget_day_9_probability, R.id.widget_day_10_probability,
+                R.id.widget_day_11_probability, R.id.widget_day_12_probability, R.id.widget_day_13_probability, R.id.widget_day_14_probability, R.id.widget_day_15_probability
+        };
         for (int i = 0; i < labels.length; i++) {
-            WeatherSnapshot.Daily day = snapshot == null || snapshot.daily.size() <= i + 1
-                    ? null : snapshot.daily.get(i + 1); // Today is shown in the current conditions above.
-            views.setTextViewText(labels[i], day == null ? "—" : i == 0 ? "Amanhã" : shortWeekday(day.date));
+            WeatherSnapshot.Daily day = snapshot == null || snapshot.daily.size() <= i
+                    ? null : snapshot.daily.get(i);
+            String dayName = "—";
+            if (day != null) {
+                if (i == 0) dayName = "Hoje";
+                else if (i == 1) dayName = "Amanhã";
+                else dayName = shortWeekday(day.date) + " " + day.date.substring(8, 10);
+            }
+            views.setTextViewText(labels[i], dayName);
             views.setTextViewText(temperatures[i], day == null ? "—" : number(day.maxTemperature, 0, "°")
                     + " / " + number(day.minTemperature, 0, "°"));
             views.setTextViewText(rain[i], day == null ? "—" : number(day.precipitation, 1, " mm"));

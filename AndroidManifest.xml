@@ -12,7 +12,7 @@
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_weather"
-        android:label="Tempo Agora"
+        android:label="Atemporal"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="false">
@@ -28,7 +28,7 @@
         <receiver
             android:name=".WeatherWidgetProvider"
             android:exported="true"
-            android:label="Tempo Agora">
+            android:label="Atemporal">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
