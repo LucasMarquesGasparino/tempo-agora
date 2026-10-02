@@ -187,7 +187,7 @@
         <TextView android:id="@+id/widget_day_1_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:textColor="#339DC5" />
         <TextView android:id="@+id/widget_day_1_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:textColor="#183544" />
     </LinearLayout>
-    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E8EFF2" />
+    <TextView android:layout_width="match_parent" android:layout_height="1dp" android:background="#E8EFF2" android:includeFontPadding="false" android:text="" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="18dp"
@@ -198,7 +198,7 @@
         <TextView android:id="@+id/widget_day_2_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:textColor="#339DC5" />
         <TextView android:id="@+id/widget_day_2_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:textColor="#183544" />
     </LinearLayout>
-    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E8EFF2" />
+    <TextView android:layout_width="match_parent" android:layout_height="1dp" android:background="#E8EFF2" android:includeFontPadding="false" android:text="" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="18dp"
@@ -209,7 +209,7 @@
         <TextView android:id="@+id/widget_day_3_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:textColor="#339DC5" />
         <TextView android:id="@+id/widget_day_3_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:textColor="#183544" />
     </LinearLayout>
-    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E8EFF2" />
+    <TextView android:layout_width="match_parent" android:layout_height="1dp" android:background="#E8EFF2" android:includeFontPadding="false" android:text="" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="18dp"
@@ -220,7 +220,7 @@
         <TextView android:id="@+id/widget_day_4_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:textColor="#339DC5" />
         <TextView android:id="@+id/widget_day_4_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:textColor="#183544" />
     </LinearLayout>
-    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E8EFF2" />
+    <TextView android:layout_width="match_parent" android:layout_height="1dp" android:background="#E8EFF2" android:includeFontPadding="false" android:text="" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="18dp"
