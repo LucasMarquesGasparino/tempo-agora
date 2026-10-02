@@ -11,9 +11,12 @@ import android.widget.RemoteViews;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -66,6 +69,7 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_weather);
         Place place = selectedPlace(context);
         WeatherSnapshot snapshot = place == null ? null : readSnapshot(context, place);
+        updateDailyForecast(views, snapshot);
 
         views.setTextViewText(R.id.widget_place, place == null ? "Tempo Agora" : place.name);
         views.setTextViewText(R.id.widget_subtitle, place == null ? "Escolha uma cidade no app" : place.subtitle());
@@ -106,6 +110,38 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
         PendingIntent refresh = PendingIntent.getBroadcast(context, 7000 + widgetId, refreshIntent, pendingFlags);
         views.setOnClickPendingIntent(R.id.widget_updated, refresh);
         return views;
+    }
+
+    private static void updateDailyForecast(RemoteViews views, WeatherSnapshot snapshot) {
+        int[] labels = {R.id.widget_day_1_label, R.id.widget_day_2_label, R.id.widget_day_3_label,
+                R.id.widget_day_4_label, R.id.widget_day_5_label};
+        int[] temperatures = {R.id.widget_day_1_temp, R.id.widget_day_2_temp, R.id.widget_day_3_temp,
+                R.id.widget_day_4_temp, R.id.widget_day_5_temp};
+        int[] rain = {R.id.widget_day_1_rain, R.id.widget_day_2_rain, R.id.widget_day_3_rain,
+                R.id.widget_day_4_rain, R.id.widget_day_5_rain};
+        int[] probabilities = {R.id.widget_day_1_probability, R.id.widget_day_2_probability,
+                R.id.widget_day_3_probability, R.id.widget_day_4_probability, R.id.widget_day_5_probability};
+        for (int i = 0; i < labels.length; i++) {
+            WeatherSnapshot.Daily day = snapshot == null || snapshot.daily.size() <= i + 1
+                    ? null : snapshot.daily.get(i + 1); // Today is shown in the current conditions above.
+            views.setTextViewText(labels[i], day == null ? "—" : i == 0 ? "Amanhã" : shortWeekday(day.date));
+            views.setTextViewText(temperatures[i], day == null ? "—" : number(day.maxTemperature, 0, "°")
+                    + " / " + number(day.minTemperature, 0, "°"));
+            views.setTextViewText(rain[i], day == null ? "—" : number(day.precipitation, 1, " mm"));
+            views.setTextViewText(probabilities[i], day == null ? "—" : number(day.precipitationProbability, 0, "%"));
+        }
+    }
+
+    private static String shortWeekday(String isoDate) {
+        try {
+            SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            input.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date date = input.parse(isoDate);
+            SimpleDateFormat output = new SimpleDateFormat("EEE", new Locale("pt", "BR"));
+            output.setTimeZone(TimeZone.getTimeZone("UTC"));
+            String day = output.format(date);
+            return day.substring(0, 1).toUpperCase(new Locale("pt", "BR")) + day.substring(1, 3);
+        } catch (Exception ignored) { return isoDate; }
     }
 
     private static Place selectedPlace(Context context) {
