@@ -41,14 +41,32 @@
                 android:textSize="10sp" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/widget_icon"
-            android:layout_width="34dp"
-            android:layout_height="34dp"
-            android:gravity="center"
-            android:text="☁"
-            android:textColor="#177FAE"
-            android:textSize="25sp" />
+        <LinearLayout
+            android:layout_width="52dp"
+            android:layout_height="wrap_content"
+            android:gravity="end|center_vertical"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/widget_date"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:includeFontPadding="false"
+                android:text="02/10"
+                android:textColor="#6C808B"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/widget_icon"
+                android:layout_width="34dp"
+                android:layout_height="22dp"
+                android:gravity="center"
+                android:text="☁"
+                android:textColor="#177FAE"
+                android:textSize="20sp" />
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
@@ -152,183 +170,36 @@
         android:orientation="vertical"
         android:paddingStart="6dp"
         android:paddingEnd="6dp"
-        android:paddingTop="2dp"
-        android:paddingBottom="2dp"
         android:visibility="gone">
-    <LinearLayout
-        android:id="@+id/widget_today_columns"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingTop="2dp"
-        android:paddingBottom="1dp">
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.15" android:text="HORA" android:textColor="#6C808B" android:textSize="8sp" />
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.65" android:gravity="center" android:text="TEMP" android:textColor="#6C808B" android:textSize="8sp" />
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="CHUVA" android:textColor="#6C808B" android:textSize="8sp" />
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.9" android:gravity="end" android:text="CHANCE" android:textColor="#6C808B" android:textSize="8sp" />
+        <LinearLayout
+            android:id="@+id/widget_today_columns"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:layoutDirection="ltr"
+            android:orientation="horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="1dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.15" android:text="HORA" android:textColor="#6C808B" android:textSize="8sp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.65" android:gravity="center" android:text="TEMP." android:textColor="#6C808B" android:textSize="8sp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="mm" android:textColor="#6C808B" android:textSize="8sp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.9" android:gravity="end" android:text="CHANCE" android:textColor="#6C808B" android:textSize="8sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/widget_today_rows"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
     </LinearLayout>
-    <LinearLayout
-        android:id="@+id/widget_forecast_row_1"
-        android:layout_width="match_parent"
-        android:layout_height="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone">
-        <TextView android:id="@+id/widget_forecast_1_label" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.15" android:text="—" />
-        <TextView android:id="@+id/widget_forecast_1_temp" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.65" android:gravity="center" android:text="—" android:textColor="#183544" android:textStyle="bold" />
-        <TextView android:id="@+id/widget_forecast_1_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:text="—" android:textColor="#339DC5" />
-        <TextView android:id="@+id/widget_forecast_1_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:text="—" android:textColor="#183544" />
-    </LinearLayout>
+
     <TextView
-        android:id="@+id/widget_forecast_divider_1"
+        android:id="@+id/widget_forecast_section_divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#E8EFF2"
-        android:includeFontPadding="false"
-        android:text=""
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp"
+        android:background="#CAD9DF"
         android:visibility="gone" />
-    <LinearLayout
-        android:id="@+id/widget_forecast_row_2"
-        android:layout_width="match_parent"
-        android:layout_height="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone">
-        <TextView android:id="@+id/widget_forecast_2_label" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.15" android:text="—" />
-        <TextView android:id="@+id/widget_forecast_2_temp" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.65" android:gravity="center" android:text="—" android:textColor="#183544" android:textStyle="bold" />
-        <TextView android:id="@+id/widget_forecast_2_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:text="—" android:textColor="#339DC5" />
-        <TextView android:id="@+id/widget_forecast_2_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:text="—" android:textColor="#183544" />
-    </LinearLayout>
-    <TextView
-        android:id="@+id/widget_forecast_divider_2"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#E8EFF2"
-        android:includeFontPadding="false"
-        android:text=""
-        android:visibility="gone" />
-    <LinearLayout
-        android:id="@+id/widget_forecast_row_3"
-        android:layout_width="match_parent"
-        android:layout_height="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone">
-        <TextView android:id="@+id/widget_forecast_3_label" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.15" android:text="—" />
-        <TextView android:id="@+id/widget_forecast_3_temp" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.65" android:gravity="center" android:text="—" android:textColor="#183544" android:textStyle="bold" />
-        <TextView android:id="@+id/widget_forecast_3_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:text="—" android:textColor="#339DC5" />
-        <TextView android:id="@+id/widget_forecast_3_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:text="—" android:textColor="#183544" />
-    </LinearLayout>
-    <TextView
-        android:id="@+id/widget_forecast_divider_3"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#E8EFF2"
-        android:includeFontPadding="false"
-        android:text=""
-        android:visibility="gone" />
-    <LinearLayout
-        android:id="@+id/widget_forecast_row_4"
-        android:layout_width="match_parent"
-        android:layout_height="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone">
-        <TextView android:id="@+id/widget_forecast_4_label" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.15" android:text="—" />
-        <TextView android:id="@+id/widget_forecast_4_temp" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.65" android:gravity="center" android:text="—" android:textColor="#183544" android:textStyle="bold" />
-        <TextView android:id="@+id/widget_forecast_4_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:text="—" android:textColor="#339DC5" />
-        <TextView android:id="@+id/widget_forecast_4_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:text="—" android:textColor="#183544" />
-    </LinearLayout>
-    <TextView
-        android:id="@+id/widget_forecast_divider_4"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#E8EFF2"
-        android:includeFontPadding="false"
-        android:text=""
-        android:visibility="gone" />
-    <LinearLayout
-        android:id="@+id/widget_forecast_row_5"
-        android:layout_width="match_parent"
-        android:layout_height="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone">
-        <TextView android:id="@+id/widget_forecast_5_label" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.15" android:text="—" />
-        <TextView android:id="@+id/widget_forecast_5_temp" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.65" android:gravity="center" android:text="—" android:textColor="#183544" android:textStyle="bold" />
-        <TextView android:id="@+id/widget_forecast_5_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:text="—" android:textColor="#339DC5" />
-        <TextView android:id="@+id/widget_forecast_5_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:text="—" android:textColor="#183544" />
-    </LinearLayout>
-    <TextView
-        android:id="@+id/widget_forecast_divider_5"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#E8EFF2"
-        android:includeFontPadding="false"
-        android:text=""
-        android:visibility="gone" />
-    <LinearLayout
-        android:id="@+id/widget_forecast_row_6"
-        android:layout_width="match_parent"
-        android:layout_height="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone">
-        <TextView android:id="@+id/widget_forecast_6_label" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.15" android:text="—" />
-        <TextView android:id="@+id/widget_forecast_6_temp" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.65" android:gravity="center" android:text="—" android:textColor="#183544" android:textStyle="bold" />
-        <TextView android:id="@+id/widget_forecast_6_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:text="—" android:textColor="#339DC5" />
-        <TextView android:id="@+id/widget_forecast_6_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:text="—" android:textColor="#183544" />
-    </LinearLayout>
-    <TextView
-        android:id="@+id/widget_forecast_divider_6"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#E8EFF2"
-        android:includeFontPadding="false"
-        android:text=""
-        android:visibility="gone" />
-    <LinearLayout
-        android:id="@+id/widget_forecast_row_7"
-        android:layout_width="match_parent"
-        android:layout_height="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone">
-        <TextView android:id="@+id/widget_forecast_7_label" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.15" android:text="—" />
-        <TextView android:id="@+id/widget_forecast_7_temp" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.65" android:gravity="center" android:text="—" android:textColor="#183544" android:textStyle="bold" />
-        <TextView android:id="@+id/widget_forecast_7_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:text="—" android:textColor="#339DC5" />
-        <TextView android:id="@+id/widget_forecast_7_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:text="—" android:textColor="#183544" />
-    </LinearLayout>
-    <TextView
-        android:id="@+id/widget_forecast_divider_7"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#E8EFF2"
-        android:includeFontPadding="false"
-        android:text=""
-        android:visibility="gone" />
-    <LinearLayout
-        android:id="@+id/widget_forecast_row_8"
-        android:layout_width="match_parent"
-        android:layout_height="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone">
-        <TextView android:id="@+id/widget_forecast_8_label" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.15" android:text="—" />
-        <TextView android:id="@+id/widget_forecast_8_temp" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.65" android:gravity="center" android:text="—" android:textColor="#183544" android:textStyle="bold" />
-        <TextView android:id="@+id/widget_forecast_8_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:text="—" android:textColor="#339DC5" />
-        <TextView android:id="@+id/widget_forecast_8_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:text="—" android:textColor="#183544" />
-    </LinearLayout>
-    <TextView
-        android:id="@+id/widget_forecast_divider_8"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#E8EFF2"
-        android:includeFontPadding="false"
-        android:text=""
-        android:visibility="gone" />
-    </LinearLayout>
 
     <TextView
         android:id="@+id/widget_days_title"
@@ -340,11 +211,13 @@
         android:paddingTop="3dp"
         android:paddingEnd="7dp"
         android:paddingBottom="3dp"
-        android:text="PRÓXIMOS 7 DIAS"
+        android:text="DIÁRIO · PRÓXIMOS 7 DIAS"
         android:textColor="#183544"
         android:textSize="9sp"
         android:textStyle="bold"
         android:visibility="gone" />
+
+
 
     <LinearLayout
         android:id="@+id/widget_days_table"
@@ -355,155 +228,28 @@
         android:orientation="vertical"
         android:paddingStart="6dp"
         android:paddingEnd="6dp"
-        android:paddingTop="2dp"
-        android:paddingBottom="2dp"
         android:visibility="gone">
-    <LinearLayout
-        android:id="@+id/widget_days_columns"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingTop="2dp"
-        android:paddingBottom="1dp">
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.15" android:text="DIA" android:textColor="#6C808B" android:textSize="8sp" />
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.65" android:gravity="center" android:text="MÁX / MÍN" android:textColor="#6C808B" android:textSize="8sp" />
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="CHUVA" android:textColor="#6C808B" android:textSize="8sp" />
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.9" android:gravity="end" android:text="CHANCE" android:textColor="#6C808B" android:textSize="8sp" />
+        <LinearLayout
+            android:id="@+id/widget_days_columns"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:layoutDirection="ltr"
+            android:orientation="horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="1dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.15" android:text="DIA" android:textColor="#6C808B" android:textSize="8sp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.65" android:gravity="center" android:text="MÁX / MÍN" android:textColor="#6C808B" android:textSize="8sp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="mm" android:textColor="#6C808B" android:textSize="8sp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.9" android:gravity="end" android:text="CHANCE" android:textColor="#6C808B" android:textSize="8sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/widget_days_rows"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
     </LinearLayout>
-    <LinearLayout
-        android:id="@+id/widget_forecast_row_9"
-        android:layout_width="match_parent"
-        android:layout_height="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone">
-        <TextView android:id="@+id/widget_forecast_9_label" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.15" android:text="—" />
-        <TextView android:id="@+id/widget_forecast_9_temp" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.65" android:gravity="center" android:text="—" android:textColor="#183544" android:textStyle="bold" />
-        <TextView android:id="@+id/widget_forecast_9_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:text="—" android:textColor="#339DC5" />
-        <TextView android:id="@+id/widget_forecast_9_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:text="—" android:textColor="#183544" />
-    </LinearLayout>
-    <TextView
-        android:id="@+id/widget_forecast_divider_9"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#E8EFF2"
-        android:includeFontPadding="false"
-        android:text=""
-        android:visibility="gone" />
-    <LinearLayout
-        android:id="@+id/widget_forecast_row_10"
-        android:layout_width="match_parent"
-        android:layout_height="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone">
-        <TextView android:id="@+id/widget_forecast_10_label" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.15" android:text="—" />
-        <TextView android:id="@+id/widget_forecast_10_temp" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.65" android:gravity="center" android:text="—" android:textColor="#183544" android:textStyle="bold" />
-        <TextView android:id="@+id/widget_forecast_10_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:text="—" android:textColor="#339DC5" />
-        <TextView android:id="@+id/widget_forecast_10_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:text="—" android:textColor="#183544" />
-    </LinearLayout>
-    <TextView
-        android:id="@+id/widget_forecast_divider_10"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#E8EFF2"
-        android:includeFontPadding="false"
-        android:text=""
-        android:visibility="gone" />
-    <LinearLayout
-        android:id="@+id/widget_forecast_row_11"
-        android:layout_width="match_parent"
-        android:layout_height="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone">
-        <TextView android:id="@+id/widget_forecast_11_label" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.15" android:text="—" />
-        <TextView android:id="@+id/widget_forecast_11_temp" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.65" android:gravity="center" android:text="—" android:textColor="#183544" android:textStyle="bold" />
-        <TextView android:id="@+id/widget_forecast_11_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:text="—" android:textColor="#339DC5" />
-        <TextView android:id="@+id/widget_forecast_11_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:text="—" android:textColor="#183544" />
-    </LinearLayout>
-    <TextView
-        android:id="@+id/widget_forecast_divider_11"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#E8EFF2"
-        android:includeFontPadding="false"
-        android:text=""
-        android:visibility="gone" />
-    <LinearLayout
-        android:id="@+id/widget_forecast_row_12"
-        android:layout_width="match_parent"
-        android:layout_height="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone">
-        <TextView android:id="@+id/widget_forecast_12_label" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.15" android:text="—" />
-        <TextView android:id="@+id/widget_forecast_12_temp" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.65" android:gravity="center" android:text="—" android:textColor="#183544" android:textStyle="bold" />
-        <TextView android:id="@+id/widget_forecast_12_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:text="—" android:textColor="#339DC5" />
-        <TextView android:id="@+id/widget_forecast_12_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:text="—" android:textColor="#183544" />
-    </LinearLayout>
-    <TextView
-        android:id="@+id/widget_forecast_divider_12"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#E8EFF2"
-        android:includeFontPadding="false"
-        android:text=""
-        android:visibility="gone" />
-    <LinearLayout
-        android:id="@+id/widget_forecast_row_13"
-        android:layout_width="match_parent"
-        android:layout_height="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone">
-        <TextView android:id="@+id/widget_forecast_13_label" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.15" android:text="—" />
-        <TextView android:id="@+id/widget_forecast_13_temp" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.65" android:gravity="center" android:text="—" android:textColor="#183544" android:textStyle="bold" />
-        <TextView android:id="@+id/widget_forecast_13_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:text="—" android:textColor="#339DC5" />
-        <TextView android:id="@+id/widget_forecast_13_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:text="—" android:textColor="#183544" />
-    </LinearLayout>
-    <TextView
-        android:id="@+id/widget_forecast_divider_13"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#E8EFF2"
-        android:includeFontPadding="false"
-        android:text=""
-        android:visibility="gone" />
-    <LinearLayout
-        android:id="@+id/widget_forecast_row_14"
-        android:layout_width="match_parent"
-        android:layout_height="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone">
-        <TextView android:id="@+id/widget_forecast_14_label" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.15" android:text="—" />
-        <TextView android:id="@+id/widget_forecast_14_temp" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.65" android:gravity="center" android:text="—" android:textColor="#183544" android:textStyle="bold" />
-        <TextView android:id="@+id/widget_forecast_14_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:text="—" android:textColor="#339DC5" />
-        <TextView android:id="@+id/widget_forecast_14_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:text="—" android:textColor="#183544" />
-    </LinearLayout>
-    <TextView
-        android:id="@+id/widget_forecast_divider_14"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#E8EFF2"
-        android:includeFontPadding="false"
-        android:text=""
-        android:visibility="gone" />
-    <LinearLayout
-        android:id="@+id/widget_forecast_row_15"
-        android:layout_width="match_parent"
-        android:layout_height="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone">
-        <TextView android:id="@+id/widget_forecast_15_label" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.15" android:text="—" />
-        <TextView android:id="@+id/widget_forecast_15_temp" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1.65" android:gravity="center" android:text="—" android:textColor="#183544" android:textStyle="bold" />
-        <TextView android:id="@+id/widget_forecast_15_rain" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:gravity="end" android:text="—" android:textColor="#339DC5" />
-        <TextView android:id="@+id/widget_forecast_15_probability" style="@style/WidgetForecastCell" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="0.9" android:gravity="end" android:text="—" android:textColor="#183544" />
-    </LinearLayout>
-    </LinearLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

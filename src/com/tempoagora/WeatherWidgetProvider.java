@@ -100,10 +100,11 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_weather);
         Place place = selectedPlace(context);
         WeatherSnapshot snapshot = place == null ? null : readSnapshot(context, place);
-        updateForecast(views, snapshot);
+        updateForecast(context, views, snapshot);
 
         views.setTextViewText(R.id.widget_place, place == null ? "Atemporal" : place.name);
         views.setTextViewText(R.id.widget_subtitle, place == null ? "Escolha uma cidade no app" : place.subtitle());
+        views.setTextViewText(R.id.widget_date, widgetDate(snapshot));
         if (snapshot == null) {
             views.setTextViewText(R.id.widget_temperature, "—°");
             views.setTextViewText(R.id.widget_condition, place == null ? "Toque para escolher uma cidade" : "Toque para carregar a previsão");
@@ -143,70 +144,57 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
         return views;
     }
 
-    private static void updateForecast(RemoteViews views, WeatherSnapshot snapshot) {
-        int[] labels = {
-                R.id.widget_forecast_1_label, R.id.widget_forecast_2_label, R.id.widget_forecast_3_label, R.id.widget_forecast_4_label, R.id.widget_forecast_5_label,
-                R.id.widget_forecast_6_label, R.id.widget_forecast_7_label, R.id.widget_forecast_8_label, R.id.widget_forecast_9_label, R.id.widget_forecast_10_label,
-                R.id.widget_forecast_11_label, R.id.widget_forecast_12_label, R.id.widget_forecast_13_label, R.id.widget_forecast_14_label, R.id.widget_forecast_15_label
-        };
-        int[] temperatures = {
-                R.id.widget_forecast_1_temp, R.id.widget_forecast_2_temp, R.id.widget_forecast_3_temp, R.id.widget_forecast_4_temp, R.id.widget_forecast_5_temp,
-                R.id.widget_forecast_6_temp, R.id.widget_forecast_7_temp, R.id.widget_forecast_8_temp, R.id.widget_forecast_9_temp, R.id.widget_forecast_10_temp,
-                R.id.widget_forecast_11_temp, R.id.widget_forecast_12_temp, R.id.widget_forecast_13_temp, R.id.widget_forecast_14_temp, R.id.widget_forecast_15_temp
-        };
-        int[] rain = {
-                R.id.widget_forecast_1_rain, R.id.widget_forecast_2_rain, R.id.widget_forecast_3_rain, R.id.widget_forecast_4_rain, R.id.widget_forecast_5_rain,
-                R.id.widget_forecast_6_rain, R.id.widget_forecast_7_rain, R.id.widget_forecast_8_rain, R.id.widget_forecast_9_rain, R.id.widget_forecast_10_rain,
-                R.id.widget_forecast_11_rain, R.id.widget_forecast_12_rain, R.id.widget_forecast_13_rain, R.id.widget_forecast_14_rain, R.id.widget_forecast_15_rain
-        };
-        int[] probabilities = {
-                R.id.widget_forecast_1_probability, R.id.widget_forecast_2_probability, R.id.widget_forecast_3_probability, R.id.widget_forecast_4_probability, R.id.widget_forecast_5_probability,
-                R.id.widget_forecast_6_probability, R.id.widget_forecast_7_probability, R.id.widget_forecast_8_probability, R.id.widget_forecast_9_probability, R.id.widget_forecast_10_probability,
-                R.id.widget_forecast_11_probability, R.id.widget_forecast_12_probability, R.id.widget_forecast_13_probability, R.id.widget_forecast_14_probability, R.id.widget_forecast_15_probability
-        };
-        int[] rows = {
-                R.id.widget_forecast_row_1, R.id.widget_forecast_row_2, R.id.widget_forecast_row_3, R.id.widget_forecast_row_4, R.id.widget_forecast_row_5,
-                R.id.widget_forecast_row_6, R.id.widget_forecast_row_7, R.id.widget_forecast_row_8, R.id.widget_forecast_row_9, R.id.widget_forecast_row_10,
-                R.id.widget_forecast_row_11, R.id.widget_forecast_row_12, R.id.widget_forecast_row_13, R.id.widget_forecast_row_14, R.id.widget_forecast_row_15
-        };
-        int[] dividers = {
-                R.id.widget_forecast_divider_1, R.id.widget_forecast_divider_2, R.id.widget_forecast_divider_3, R.id.widget_forecast_divider_4, R.id.widget_forecast_divider_5,
-                R.id.widget_forecast_divider_6, R.id.widget_forecast_divider_7, R.id.widget_forecast_divider_8, R.id.widget_forecast_divider_9, R.id.widget_forecast_divider_10,
-                R.id.widget_forecast_divider_11, R.id.widget_forecast_divider_12, R.id.widget_forecast_divider_13, R.id.widget_forecast_divider_14
-        };
-
-        List<WeatherSnapshot.Hourly> hours = snapshot == null ? new ArrayList<WeatherSnapshot.Hourly>() : todayHours(snapshot);
+    private static void updateForecast(Context context, RemoteViews views, WeatherSnapshot snapshot) {
+        List<WeatherSnapshot.Hourly> hours = snapshot == null
+                ? new ArrayList<WeatherSnapshot.Hourly>() : todayHours(snapshot);
         List<WeatherSnapshot.Daily> days = upcomingDays(snapshot);
-        int todayVisibility = hours.isEmpty() ? android.view.View.GONE : android.view.View.VISIBLE;
-        int daysVisibility = days.isEmpty() ? android.view.View.GONE : android.view.View.VISIBLE;
+        boolean hasHours = !hours.isEmpty();
+        boolean hasDays = !days.isEmpty();
+        int todayVisibility = hasHours ? android.view.View.VISIBLE : android.view.View.GONE;
+        int daysVisibility = hasDays ? android.view.View.VISIBLE : android.view.View.GONE;
+
         views.setViewVisibility(R.id.widget_today_title, todayVisibility);
         views.setViewVisibility(R.id.widget_today_table, todayVisibility);
         views.setViewVisibility(R.id.widget_days_title, daysVisibility);
         views.setViewVisibility(R.id.widget_days_table, daysVisibility);
-        views.setViewVisibility(R.id.widget_today_columns, todayVisibility);
-        for (int i = 0; i < 8; i++) {
-            WeatherSnapshot.Hourly hour = i < hours.size() ? hours.get(i) : null;
-            views.setViewVisibility(rows[i], hour == null ? android.view.View.GONE : android.view.View.VISIBLE);
-            views.setViewVisibility(dividers[i], i < hours.size() - 1 ? android.view.View.VISIBLE : android.view.View.GONE);
-            views.setTextViewText(labels[i], hour == null ? "" : hour.time.substring(11, 13) + "h");
-            views.setTextViewText(temperatures[i], hour == null ? "—" : number(hour.temperature, 0, "°"));
-            views.setTextViewText(rain[i], hour == null ? "—" : number(hour.precipitation, 1, " mm"));
-            views.setTextViewText(probabilities[i], hour == null ? "—" : number(hour.precipitationProbability, 0, "%"));
+        views.setViewVisibility(R.id.widget_forecast_section_divider,
+                hasHours && hasDays ? android.view.View.VISIBLE : android.view.View.GONE);
+        views.removeAllViews(R.id.widget_today_rows);
+        views.removeAllViews(R.id.widget_days_rows);
+
+        for (int i = 0; i < hours.size(); i++) {
+            WeatherSnapshot.Hourly hour = hours.get(i);
+            String time = hour.time.substring(11, 13) + "h";
+            RemoteViews row = forecastRow(context, time,
+                    number(hour.temperature, 0, "°"),
+                    number(hour.precipitation, 1, " mm"),
+                    number(hour.precipitationProbability, 0, "%"),
+                    i < hours.size() - 1);
+            views.addView(R.id.widget_today_rows, row);
         }
 
-        for (int i = 0; i < 7; i++) {
-            int slot = i + 8;
-            WeatherSnapshot.Daily day = i < days.size() ? days.get(i) : null;
-            String dayName = "";
-            if (day != null) dayName = dailyLabel(snapshot, day);
-            views.setViewVisibility(rows[slot], day == null ? android.view.View.GONE : android.view.View.VISIBLE);
-            if (i < 6) views.setViewVisibility(dividers[slot], i < days.size() - 1 ? android.view.View.VISIBLE : android.view.View.GONE);
-            views.setTextViewText(labels[slot], dayName);
-            views.setTextViewText(temperatures[slot], day == null ? "" : number(day.maxTemperature, 0, "°")
-                    + " / " + number(day.minTemperature, 0, "°"));
-            views.setTextViewText(rain[slot], day == null ? "" : number(day.precipitation, 1, " mm"));
-            views.setTextViewText(probabilities[slot], day == null ? "" : number(day.precipitationProbability, 0, "%"));
+        for (int i = 0; i < days.size(); i++) {
+            WeatherSnapshot.Daily day = days.get(i);
+            RemoteViews row = forecastRow(context, dailyLabel(snapshot, day),
+                    number(day.maxTemperature, 0, "°") + " / " + number(day.minTemperature, 0, "°"),
+                    number(day.precipitation, 1, " mm"),
+                    number(day.precipitationProbability, 0, "%"),
+                    i < days.size() - 1);
+            views.addView(R.id.widget_days_rows, row);
         }
+    }
+
+    private static RemoteViews forecastRow(Context context, String label, String temperature,
+                                           String precipitation, String probability,
+                                           boolean showDivider) {
+        RemoteViews row = new RemoteViews(context.getPackageName(), R.layout.widget_forecast_row);
+        row.setTextViewText(R.id.widget_forecast_cell_label, label);
+        row.setTextViewText(R.id.widget_forecast_cell_temp, temperature);
+        row.setTextViewText(R.id.widget_forecast_cell_rain, precipitation);
+        row.setTextViewText(R.id.widget_forecast_cell_probability, probability);
+        row.setViewVisibility(R.id.widget_forecast_row_divider,
+                showDivider ? android.view.View.VISIBLE : android.view.View.GONE);
+        return row;
     }
 
     private static List<WeatherSnapshot.Daily> upcomingDays(WeatherSnapshot snapshot) {
@@ -245,6 +233,14 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
 
     private static boolean hasValue(double value) {
         return !Double.isNaN(value) && !Double.isInfinite(value);
+    }
+
+    private static String widgetDate(WeatherSnapshot snapshot) {
+        if (snapshot != null && snapshot.currentTime != null && snapshot.currentTime.length() >= 10) {
+            String date = snapshot.currentTime.substring(0, 10);
+            return date.substring(8, 10) + "/" + date.substring(5, 7);
+        }
+        return new SimpleDateFormat("dd/MM", new Locale("pt", "BR")).format(new Date());
     }
 
     private static String dailyLabel(WeatherSnapshot snapshot, WeatherSnapshot.Daily day) {
