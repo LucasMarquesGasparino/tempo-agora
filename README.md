@@ -20,5 +20,5 @@ cd ~/projects/tempo-agora
 bash build.sh
 ```
 
-O APK assinado localmente será criado em `build/Tempo-Agora.apk`. A pasta `build/`
+O APK assinado localmente será criado em `build/Atemporal.apk`. A pasta `build/`
 e o keystore local ficam fora do Git.

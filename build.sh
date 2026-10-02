@@ -11,10 +11,11 @@ RES_APK="$OUT/resources.apk"
 GEN="$OUT/gen"
 CLASSES="$OUT/classes"
 DEX="$OUT/dex"
-APK_NAME="Tempo-Agora.apk"
+APK_NAME="Atemporal.apk"
 
 rm -rf "$GEN" "$CLASSES" "$DEX" "$RES_COMPILED" "$RES_APK" \
-    "$OUT/classes.jar" "$OUT/unsigned.apk" "$OUT/aligned.apk" "$OUT/$APK_NAME"
+    "$OUT/classes.jar" "$OUT/unsigned.apk" "$OUT/aligned.apk" \
+    "$OUT/Tempo-Agora.apk" "$OUT/$APK_NAME"
 mkdir -p "$GEN" "$CLASSES" "$DEX"
 
 "$TOOLS_DIR/aapt2" compile --dir "$PROJECT_DIR/res" -o "$RES_COMPILED"
