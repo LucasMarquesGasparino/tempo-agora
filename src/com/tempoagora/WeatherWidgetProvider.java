@@ -23,30 +23,60 @@ import java.util.concurrent.Executors;
 /** Home-screen weather card. It renders cached data immediately and refreshes in the background. */
 public final class WeatherWidgetProvider extends AppWidgetProvider {
     private static final String PREFERENCES = "tempo_agora";
+    private static final String ACTION_REFRESH = "com.tempoagora.action.REFRESH_WIDGET";
     private static final ExecutorService REFRESHER = Executors.newSingleThreadExecutor();
+
+    @Override public void onReceive(Context context, Intent intent) {
+        if (intent != null && ACTION_REFRESH.equals(intent.getAction())) {
+            AppWidgetManager manager = AppWidgetManager.getInstance(context);
+            int[] ids = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS);
+            if (ids == null || ids.length == 0) {
+                ids = manager.getAppWidgetIds(new ComponentName(context, WeatherWidgetProvider.class));
+            }
+            showRefreshing(context, manager, ids);
+            requestRefresh(context, ids);
+            return;
+        }
+        super.onReceive(context, intent);
+    }
 
     @Override public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
         render(context, manager, ids);
+        requestRefresh(context, ids);
+    }
+
+    private void requestRefresh(Context context, int[] ids) {
         if (ids == null || ids.length == 0) return;
         PendingResult pending = goAsync();
         REFRESHER.execute(() -> {
             try {
                 Place place = selectedPlace(context);
-                if (place == null) return;
-                List<Place> places = new ArrayList<>();
-                places.add(place);
-                List<WeatherSnapshot> snapshots = new WeatherApiClient().fetch(places);
-                if (snapshots.isEmpty()) return;
-                WeatherSnapshot snapshot = snapshots.get(0);
-                context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE).edit()
-                        .putString(cacheKey(snapshot.place), snapshot.toJson().toString()).apply();
-                renderAll(context);
+                if (place != null) {
+                    List<Place> places = new ArrayList<>();
+                    places.add(place);
+                    List<WeatherSnapshot> snapshots = new WeatherApiClient().fetch(places);
+                    if (!snapshots.isEmpty()) {
+                        WeatherSnapshot snapshot = snapshots.get(0);
+                        context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE).edit()
+                                .putString(cacheKey(snapshot.place), snapshot.toJson().toString()).apply();
+                    }
+                }
             } catch (Exception ignored) {
                 // Keep the last cached forecast visible when the network is unavailable.
             } finally {
+                renderAll(context);
                 pending.finish();
             }
         });
+    }
+
+    private static void showRefreshing(Context context, AppWidgetManager manager, int[] ids) {
+        if (ids == null) return;
+        for (int id : ids) {
+            RemoteViews views = buildViews(context, id);
+            views.setTextViewText(R.id.widget_updated, "Buscando previsão atualizada…");
+            manager.updateAppWidget(id, views);
+        }
     }
 
     /** Refreshes visible instances from the app's already updated local cache. */
@@ -80,7 +110,7 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
             views.setTextViewText(R.id.widget_feels, "Sensação —");
             views.setTextViewText(R.id.widget_rain, "Chuva —");
             views.setTextViewText(R.id.widget_humidity, "Umidade —");
-            views.setTextViewText(R.id.widget_updated, "Abrir Atemporal");
+            views.setTextViewText(R.id.widget_updated, "Sem dados recentes");
         } else {
             WeatherSnapshot.Hourly next = nextHour(snapshot);
             views.setTextViewText(R.id.widget_temperature, number(snapshot.currentTemperature, 0, "°"));
@@ -94,7 +124,7 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
             views.setTextViewText(R.id.widget_humidity, "Umidade " + number(snapshot.currentHumidity, 0, "%"));
             String updated = snapshot.currentTime != null && snapshot.currentTime.length() >= 16
                     ? snapshot.currentTime.substring(11, 16) : "agora";
-            views.setTextViewText(R.id.widget_updated, "Atualizado " + updated + " · ↻");
+            views.setTextViewText(R.id.widget_updated, "Atualizado " + updated);
         }
 
         Intent openIntent = new Intent(context, MainActivity.class);
@@ -105,10 +135,10 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
         views.setOnClickPendingIntent(R.id.widget_root, open);
 
         Intent refreshIntent = new Intent(context, WeatherWidgetProvider.class);
-        refreshIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        refreshIntent.setAction(ACTION_REFRESH);
         refreshIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, new int[]{widgetId});
         PendingIntent refresh = PendingIntent.getBroadcast(context, 7000 + widgetId, refreshIntent, pendingFlags);
-        views.setOnClickPendingIntent(R.id.widget_updated, refresh);
+        views.setOnClickPendingIntent(R.id.widget_refresh, refresh);
         return views;
     }
 
