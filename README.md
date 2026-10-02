@@ -3,6 +3,8 @@
 Aplicativo Android em português para consultar o clima atual, previsões por hora
 até o fim do dia e previsão diária de 15 dias. Usa a localização do aparelho,
 permite pesquisar cidades no mundo todo e guarda uma lista de favoritos.
+O widget mostra até 8 períodos de hoje, em intervalos de 3 horas, e a previsão
+diária de 7 dias contando hoje.
 
 ## Dados
 

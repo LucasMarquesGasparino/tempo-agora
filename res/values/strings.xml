@@ -1,3 +1,3 @@
 <resources>
-    <string name="weather_widget_description">Temperatura, sensação, umidade e chuva da cidade selecionada</string>
+    <string name="weather_widget_description">Condições atuais, previsão de hoje a cada 3 horas e próximos 7 dias</string>
 </resources>

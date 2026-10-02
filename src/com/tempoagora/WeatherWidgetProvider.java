@@ -99,7 +99,7 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_weather);
         Place place = selectedPlace(context);
         WeatherSnapshot snapshot = place == null ? null : readSnapshot(context, place);
-        updateDailyForecast(views, snapshot);
+        updateForecast(views, snapshot);
 
         views.setTextViewText(R.id.widget_place, place == null ? "Atemporal" : place.name);
         views.setTextViewText(R.id.widget_subtitle, place == null ? "Escolha uma cidade no app" : place.subtitle());
@@ -142,28 +142,54 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
         return views;
     }
 
-    private static void updateDailyForecast(RemoteViews views, WeatherSnapshot snapshot) {
+    private static void updateForecast(RemoteViews views, WeatherSnapshot snapshot) {
         int[] labels = {
-                R.id.widget_day_1_label, R.id.widget_day_2_label, R.id.widget_day_3_label, R.id.widget_day_4_label, R.id.widget_day_5_label,
-                R.id.widget_day_6_label, R.id.widget_day_7_label, R.id.widget_day_8_label, R.id.widget_day_9_label, R.id.widget_day_10_label,
-                R.id.widget_day_11_label, R.id.widget_day_12_label, R.id.widget_day_13_label, R.id.widget_day_14_label, R.id.widget_day_15_label
+                R.id.widget_forecast_1_label, R.id.widget_forecast_2_label, R.id.widget_forecast_3_label, R.id.widget_forecast_4_label, R.id.widget_forecast_5_label,
+                R.id.widget_forecast_6_label, R.id.widget_forecast_7_label, R.id.widget_forecast_8_label, R.id.widget_forecast_9_label, R.id.widget_forecast_10_label,
+                R.id.widget_forecast_11_label, R.id.widget_forecast_12_label, R.id.widget_forecast_13_label, R.id.widget_forecast_14_label, R.id.widget_forecast_15_label
         };
         int[] temperatures = {
-                R.id.widget_day_1_temp, R.id.widget_day_2_temp, R.id.widget_day_3_temp, R.id.widget_day_4_temp, R.id.widget_day_5_temp,
-                R.id.widget_day_6_temp, R.id.widget_day_7_temp, R.id.widget_day_8_temp, R.id.widget_day_9_temp, R.id.widget_day_10_temp,
-                R.id.widget_day_11_temp, R.id.widget_day_12_temp, R.id.widget_day_13_temp, R.id.widget_day_14_temp, R.id.widget_day_15_temp
+                R.id.widget_forecast_1_temp, R.id.widget_forecast_2_temp, R.id.widget_forecast_3_temp, R.id.widget_forecast_4_temp, R.id.widget_forecast_5_temp,
+                R.id.widget_forecast_6_temp, R.id.widget_forecast_7_temp, R.id.widget_forecast_8_temp, R.id.widget_forecast_9_temp, R.id.widget_forecast_10_temp,
+                R.id.widget_forecast_11_temp, R.id.widget_forecast_12_temp, R.id.widget_forecast_13_temp, R.id.widget_forecast_14_temp, R.id.widget_forecast_15_temp
         };
         int[] rain = {
-                R.id.widget_day_1_rain, R.id.widget_day_2_rain, R.id.widget_day_3_rain, R.id.widget_day_4_rain, R.id.widget_day_5_rain,
-                R.id.widget_day_6_rain, R.id.widget_day_7_rain, R.id.widget_day_8_rain, R.id.widget_day_9_rain, R.id.widget_day_10_rain,
-                R.id.widget_day_11_rain, R.id.widget_day_12_rain, R.id.widget_day_13_rain, R.id.widget_day_14_rain, R.id.widget_day_15_rain
+                R.id.widget_forecast_1_rain, R.id.widget_forecast_2_rain, R.id.widget_forecast_3_rain, R.id.widget_forecast_4_rain, R.id.widget_forecast_5_rain,
+                R.id.widget_forecast_6_rain, R.id.widget_forecast_7_rain, R.id.widget_forecast_8_rain, R.id.widget_forecast_9_rain, R.id.widget_forecast_10_rain,
+                R.id.widget_forecast_11_rain, R.id.widget_forecast_12_rain, R.id.widget_forecast_13_rain, R.id.widget_forecast_14_rain, R.id.widget_forecast_15_rain
         };
         int[] probabilities = {
-                R.id.widget_day_1_probability, R.id.widget_day_2_probability, R.id.widget_day_3_probability, R.id.widget_day_4_probability, R.id.widget_day_5_probability,
-                R.id.widget_day_6_probability, R.id.widget_day_7_probability, R.id.widget_day_8_probability, R.id.widget_day_9_probability, R.id.widget_day_10_probability,
-                R.id.widget_day_11_probability, R.id.widget_day_12_probability, R.id.widget_day_13_probability, R.id.widget_day_14_probability, R.id.widget_day_15_probability
+                R.id.widget_forecast_1_probability, R.id.widget_forecast_2_probability, R.id.widget_forecast_3_probability, R.id.widget_forecast_4_probability, R.id.widget_forecast_5_probability,
+                R.id.widget_forecast_6_probability, R.id.widget_forecast_7_probability, R.id.widget_forecast_8_probability, R.id.widget_forecast_9_probability, R.id.widget_forecast_10_probability,
+                R.id.widget_forecast_11_probability, R.id.widget_forecast_12_probability, R.id.widget_forecast_13_probability, R.id.widget_forecast_14_probability, R.id.widget_forecast_15_probability
         };
-        for (int i = 0; i < labels.length; i++) {
+        int[] rows = {
+                R.id.widget_forecast_row_1, R.id.widget_forecast_row_2, R.id.widget_forecast_row_3, R.id.widget_forecast_row_4, R.id.widget_forecast_row_5,
+                R.id.widget_forecast_row_6, R.id.widget_forecast_row_7, R.id.widget_forecast_row_8, R.id.widget_forecast_row_9, R.id.widget_forecast_row_10,
+                R.id.widget_forecast_row_11, R.id.widget_forecast_row_12, R.id.widget_forecast_row_13, R.id.widget_forecast_row_14, R.id.widget_forecast_row_15
+        };
+        int[] dividers = {
+                R.id.widget_forecast_divider_1, R.id.widget_forecast_divider_2, R.id.widget_forecast_divider_3, R.id.widget_forecast_divider_4, R.id.widget_forecast_divider_5,
+                R.id.widget_forecast_divider_6, R.id.widget_forecast_divider_7, R.id.widget_forecast_divider_8, R.id.widget_forecast_divider_9, R.id.widget_forecast_divider_10,
+                R.id.widget_forecast_divider_11, R.id.widget_forecast_divider_12, R.id.widget_forecast_divider_13, R.id.widget_forecast_divider_14
+        };
+
+        List<WeatherSnapshot.Hourly> hours = snapshot == null ? new ArrayList<WeatherSnapshot.Hourly>() : todayHours(snapshot);
+        int todayVisibility = hours.isEmpty() ? android.view.View.GONE : android.view.View.VISIBLE;
+        views.setViewVisibility(R.id.widget_today_title, todayVisibility);
+        views.setViewVisibility(R.id.widget_today_columns, todayVisibility);
+        for (int i = 0; i < 8; i++) {
+            WeatherSnapshot.Hourly hour = i < hours.size() ? hours.get(i) : null;
+            views.setViewVisibility(rows[i], hour == null ? android.view.View.GONE : android.view.View.VISIBLE);
+            views.setViewVisibility(dividers[i], i < hours.size() - 1 ? android.view.View.VISIBLE : android.view.View.GONE);
+            views.setTextViewText(labels[i], hour == null ? "" : hour.time.substring(11, 13) + "h");
+            views.setTextViewText(temperatures[i], hour == null ? "—" : number(hour.temperature, 0, "°"));
+            views.setTextViewText(rain[i], hour == null ? "—" : number(hour.precipitation, 1, " mm"));
+            views.setTextViewText(probabilities[i], hour == null ? "—" : number(hour.precipitationProbability, 0, "%"));
+        }
+
+        for (int i = 0; i < 7; i++) {
+            int slot = i + 8;
             WeatherSnapshot.Daily day = snapshot == null || snapshot.daily.size() <= i
                     ? null : snapshot.daily.get(i);
             String dayName = "—";
@@ -172,12 +198,33 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
                 else if (i == 1) dayName = "Amanhã";
                 else dayName = shortWeekday(day.date) + " " + day.date.substring(8, 10);
             }
-            views.setTextViewText(labels[i], dayName);
-            views.setTextViewText(temperatures[i], day == null ? "—" : number(day.maxTemperature, 0, "°")
+            views.setViewVisibility(rows[slot], android.view.View.VISIBLE);
+            if (i < 6) views.setViewVisibility(dividers[slot], android.view.View.VISIBLE);
+            views.setTextViewText(labels[slot], dayName);
+            views.setTextViewText(temperatures[slot], day == null ? "—" : number(day.maxTemperature, 0, "°")
                     + " / " + number(day.minTemperature, 0, "°"));
-            views.setTextViewText(rain[i], day == null ? "—" : number(day.precipitation, 1, " mm"));
-            views.setTextViewText(probabilities[i], day == null ? "—" : number(day.precipitationProbability, 0, "%"));
+            views.setTextViewText(rain[slot], day == null ? "—" : number(day.precipitation, 1, " mm"));
+            views.setTextViewText(probabilities[slot], day == null ? "—" : number(day.precipitationProbability, 0, "%"));
         }
+    }
+
+    private static List<WeatherSnapshot.Hourly> todayHours(WeatherSnapshot snapshot) {
+        List<WeatherSnapshot.Hourly> result = new ArrayList<>();
+        String now = snapshot.currentTime;
+        if (now == null || now.length() < 13) return result;
+        String today = now.substring(0, 10);
+        String currentHour = now.substring(0, 13);
+        for (WeatherSnapshot.Hourly hour : snapshot.hourly) {
+            if (hour.time.length() < 13 || !hour.time.startsWith(today)
+                    || hour.time.substring(0, 13).compareTo(currentHour) <= 0) continue;
+            int hourOfDay;
+            try { hourOfDay = Integer.parseInt(hour.time.substring(11, 13)); }
+            catch (NumberFormatException ignored) { continue; }
+            if (hourOfDay % 3 != 0) continue;
+            result.add(hour);
+            if (result.size() == 8) break;
+        }
+        return result;
     }
 
     private static String shortWeekday(String isoDate) {
