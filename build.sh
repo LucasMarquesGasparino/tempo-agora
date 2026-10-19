@@ -12,6 +12,12 @@ GEN="$OUT/gen"
 CLASSES="$OUT/classes"
 DEX="$OUT/dex"
 APK_NAME="Atemporal.apk"
+KEYSTORE="${ATEMPORAL_KEYSTORE:-$HOME/.android-keys/tempo-agora.keystore}"
+KEYSTORE_DIR=$(dirname -- "$KEYSTORE")
+VERSION_CODE=$(sed -n 's/.*android:versionCode="\([0-9]*\)".*/\1/p' "$PROJECT_DIR/AndroidManifest.xml")
+VERSION_NAME=$(sed -n 's/.*android:versionName="\([^"]*\)".*/\1/p' "$PROJECT_DIR/AndroidManifest.xml")
+
+sh "$PROJECT_DIR/tests/run.sh"
 
 rm -rf "$GEN" "$CLASSES" "$DEX" "$RES_COMPILED" "$RES_APK" \
     "$OUT/classes.jar" "$OUT/unsigned.apk" "$OUT/aligned.apk" \
@@ -25,8 +31,8 @@ mkdir -p "$GEN" "$CLASSES" "$DEX"
     --java "$GEN" \
     --min-sdk-version 24 \
     --target-sdk-version 35 \
-    --version-code 1 \
-    --version-name 1.0.0 \
+    --version-code "$VERSION_CODE" \
+    --version-name "$VERSION_NAME" \
     --auto-add-overlay \
     -o "$RES_APK" -R "$RES_COMPILED"
 
@@ -49,9 +55,12 @@ cp "$RES_APK" "$OUT/unsigned.apk"
 jar uf "$OUT/unsigned.apk" -C "$DEX" classes.dex
 "$TOOLS_DIR/zipalign" -f -p 4 "$OUT/unsigned.apk" "$OUT/aligned.apk"
 
-if [ ! -f "$OUT/tempo-agora-local.keystore" ]; then
+# A chave de assinatura fica fora de build/ (que é apagado a cada compilação).
+mkdir -p "$KEYSTORE_DIR"
+chmod 700 "$KEYSTORE_DIR"
+if [ ! -f "$KEYSTORE" ]; then
     keytool -genkeypair -noprompt \
-        -keystore "$OUT/tempo-agora-local.keystore" \
+        -keystore "$KEYSTORE" \
         -storepass tempoagora-local \
         -keypass tempoagora-local \
         -alias tempoagora \
@@ -60,7 +69,7 @@ if [ ! -f "$OUT/tempo-agora-local.keystore" ]; then
 fi
 
 "$TOOLS_DIR/apksigner" sign \
-    --ks "$OUT/tempo-agora-local.keystore" \
+    --ks "$KEYSTORE" \
     --ks-pass pass:tempoagora-local \
     --key-pass pass:tempoagora-local \
     --out "$OUT/$APK_NAME" \
