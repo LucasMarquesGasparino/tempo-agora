@@ -7,9 +7,8 @@ package com.tempoagora;
 public final class WidgetSizing {
     static final int COMPACT_HEIGHT = 110;
     static final int COMPACT_WIDTH = 160;
-    /** Horas mostradas quando os dias também aparecem: entre 2 e 4, cerca de 1/4 das linhas. */
+    /** Mínimo de horas quando as duas tabelas aparecem. */
     static final int MIN_HOURS = 2;
-    static final int MAX_HOURS_WITH_DAYS = 4;
 
     /** Alturas em qualquer unidade (px medidos ou dp estimados), desde que todas iguais. */
     static final class Metrics {
@@ -51,8 +50,9 @@ public final class WidgetSizing {
     }
 
     /**
-     * Devolve {horas, dias}. Prioriza os dias: as horas ficam com cerca de 1/4 das
-     * linhas (2 a 4) e os dias com o resto; sobra de um lado volta para o outro.
+     * Devolve {horas, dias}. As horas de hoje ficam com metade das linhas (mínimo 2);
+     * os dias ocupam o resto e, se faltarem dias, a sobra volta para as horas.
+     * Sem espaço para as duas tabelas, mostra só as horas.
      */
     static int[] plan(int height, Metrics m, int nHours, int nDays) {
         nHours = Math.max(0, nHours);
@@ -61,25 +61,21 @@ public final class WidgetSizing {
 
         if (nHours > 0 && nDays > 0) {
             int rows = (free - m.hoursSection - m.daysSection - m.divider) / m.row;
-            if (rows >= MIN_HOURS + 2) {
-                int hours = Math.min(nHours, clamp(rows / 4, MIN_HOURS, MAX_HOURS_WITH_DAYS));
+            if (rows >= MIN_HOURS + 1) {
+                int hours = Math.min(nHours, Math.max(MIN_HOURS, rows / 2));
                 int days = Math.min(nDays, rows - hours);
                 hours = Math.min(nHours, rows - days);
                 return new int[] {hours, days};
             }
         }
-        if (nDays > 0) {
-            int rows = (free - m.daysSection) / m.row;
-            if (rows >= 2) return new int[] {0, Math.min(nDays, rows)};
-        }
         if (nHours > 0) {
             int rows = (free - m.hoursSection) / m.row;
             if (rows >= 2) return new int[] {Math.min(nHours, rows), 0};
         }
+        if (nDays > 0) {
+            int rows = (free - m.daysSection) / m.row;
+            if (rows >= 2) return new int[] {0, Math.min(nDays, rows)};
+        }
         return new int[] {0, 0};
-    }
-
-    private static int clamp(int value, int min, int max) {
-        return Math.max(min, Math.min(max, value));
     }
 }
