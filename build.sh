@@ -77,3 +77,9 @@ fi
 "$TOOLS_DIR/apksigner" verify --verbose "$OUT/$APK_NAME"
 printf 'APK criado: %s\n' "$OUT/$APK_NAME"
 ls -lh "$OUT/$APK_NAME"
+
+# Entrega: pasta única de APKs no armazenamento compartilhado.
+APK_DELIVERY_DIR="${ATEMPORAL_APK_DIR:-/sdcard/Documents/APK}"
+mkdir -p "$APK_DELIVERY_DIR"
+cp "$OUT/$APK_NAME" "$APK_DELIVERY_DIR/$APK_NAME"
+printf 'APK copiado para: %s\n' "$APK_DELIVERY_DIR/$APK_NAME"

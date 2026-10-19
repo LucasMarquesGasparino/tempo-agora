@@ -26,7 +26,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="Atemporal"
-                android:textColor="#183544"
+                android:textColor="@color/widget_ink"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -37,12 +37,12 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="Sua cidade"
-                android:textColor="#6C808B"
+                android:textColor="@color/widget_muted"
                 android:textSize="10sp" />
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="52dp"
+            android:layout_width="84dp"
             android:layout_height="wrap_content"
             android:gravity="end|center_vertical"
             android:orientation="vertical">
@@ -51,21 +51,22 @@
                 android:id="@+id/widget_date"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
                 android:gravity="end"
                 android:includeFontPadding="false"
-                android:text="02/10"
-                android:textColor="#6C808B"
+                android:maxLines="1"
+                android:text="Dom, 18 out"
+                android:textColor="@color/widget_muted"
                 android:textSize="10sp"
                 android:textStyle="bold" />
 
-            <TextView
+            <ImageView
                 android:id="@+id/widget_icon"
-                android:layout_width="34dp"
-                android:layout_height="22dp"
-                android:gravity="center"
-                android:text="☁"
-                android:textColor="#177FAE"
-                android:textSize="20sp" />
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="end"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_wx_cloudy" />
         </LinearLayout>
     </LinearLayout>
 
@@ -82,7 +83,7 @@
             android:layout_height="wrap_content"
             android:includeFontPadding="false"
             android:text="—°"
-            android:textColor="#183544"
+            android:textColor="@color/widget_ink"
             android:textSize="36sp"
             android:textStyle="bold" />
 
@@ -100,7 +101,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="Carregando clima"
-                android:textColor="#183544"
+                android:textColor="@color/widget_ink"
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
@@ -111,7 +112,17 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="Sensação —"
-                android:textColor="#6C808B"
+                android:textColor="@color/widget_muted"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/widget_minmax"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text=""
+                android:textColor="@color/widget_muted"
                 android:textSize="10sp" />
         </LinearLayout>
     </LinearLayout>
@@ -130,7 +141,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:text="Chuva —"
-            android:textColor="#339DC5"
+            android:textColor="@color/widget_rain"
             android:textSize="10sp"
             android:textStyle="bold" />
 
@@ -141,7 +152,18 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:text="Umidade —"
-            android:textColor="#6C808B"
+            android:textColor="@color/widget_muted"
+            android:textSize="10sp" />
+
+        <TextView
+            android:id="@+id/widget_wind"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Vento —"
+            android:textColor="@color/widget_muted"
             android:textSize="10sp" />
     </LinearLayout>
 
@@ -156,7 +178,7 @@
         android:paddingEnd="7dp"
         android:paddingBottom="3dp"
         android:text="HOJE · PRÓXIMOS HORÁRIOS"
-        android:textColor="#183544"
+        android:textColor="@color/widget_ink"
         android:textSize="9sp"
         android:textStyle="bold"
         android:visibility="gone" />
@@ -180,10 +202,11 @@
             android:orientation="horizontal"
             android:paddingTop="2dp"
             android:paddingBottom="1dp">
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.15" android:text="HORA" android:textColor="#6C808B" android:textSize="8sp" />
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.65" android:gravity="center" android:text="TEMP." android:textColor="#6C808B" android:textSize="8sp" />
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="mm" android:textColor="#6C808B" android:textSize="8sp" />
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.9" android:gravity="end" android:text="CHANCE" android:textColor="#6C808B" android:textSize="8sp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.15" android:text="HORA" android:textColor="@color/widget_muted" android:textSize="9sp" />
+            <View android:layout_width="18dp" android:layout_height="1dp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.65" android:gravity="center" android:text="TEMP." android:textColor="@color/widget_muted" android:textSize="9sp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="mm" android:textColor="@color/widget_muted" android:textSize="9sp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.9" android:gravity="end" android:text="CHANCE" android:textColor="@color/widget_muted" android:textSize="9sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/widget_today_rows"
@@ -198,7 +221,7 @@
         android:layout_height="1dp"
         android:layout_marginTop="4dp"
         android:layout_marginBottom="4dp"
-        android:background="#CAD9DF"
+        android:background="@color/widget_divider"
         android:visibility="gone" />
 
     <TextView
@@ -212,12 +235,10 @@
         android:paddingEnd="7dp"
         android:paddingBottom="3dp"
         android:text="DIÁRIO · PRÓXIMOS 7 DIAS"
-        android:textColor="#183544"
+        android:textColor="@color/widget_ink"
         android:textSize="9sp"
         android:textStyle="bold"
         android:visibility="gone" />
-
-
 
     <LinearLayout
         android:id="@+id/widget_days_table"
@@ -238,10 +259,11 @@
             android:orientation="horizontal"
             android:paddingTop="2dp"
             android:paddingBottom="1dp">
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.15" android:text="DIA" android:textColor="#6C808B" android:textSize="8sp" />
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.65" android:gravity="center" android:text="MÁX / MÍN" android:textColor="#6C808B" android:textSize="8sp" />
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="mm" android:textColor="#6C808B" android:textSize="8sp" />
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.9" android:gravity="end" android:text="CHANCE" android:textColor="#6C808B" android:textSize="8sp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.15" android:text="DIA" android:textColor="@color/widget_muted" android:textSize="9sp" />
+            <View android:layout_width="18dp" android:layout_height="1dp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.65" android:gravity="center" android:text="MÁX / MÍN" android:textColor="@color/widget_muted" android:textSize="9sp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="mm" android:textColor="@color/widget_muted" android:textSize="9sp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.9" android:gravity="end" android:text="CHANCE" android:textColor="@color/widget_muted" android:textSize="9sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/widget_days_rows"
@@ -265,13 +287,13 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:text="Sem dados recentes"
-            android:textColor="#6C808B"
-            android:textSize="9sp" />
+            android:textColor="@color/widget_muted"
+            android:textSize="10sp" />
 
         <TextView
             android:id="@+id/widget_refresh"
             android:layout_width="wrap_content"
-            android:layout_height="32dp"
+            android:layout_height="36dp"
             android:background="@drawable/widget_refresh_button"
             android:contentDescription="Atualizar previsão do tempo"
             android:gravity="center"
@@ -279,7 +301,7 @@
             android:paddingStart="9dp"
             android:paddingEnd="9dp"
             android:text="↻ Atualizar"
-            android:textColor="#177FAE"
+            android:textColor="@color/widget_accent"
             android:textSize="10sp"
             android:textStyle="bold" />
     </LinearLayout>

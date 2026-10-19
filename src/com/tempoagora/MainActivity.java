@@ -52,6 +52,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public final class MainActivity extends Activity {
+    /** Extra booleano: true quando a tela foi aberta tocando no widget. */
+    static final String EXTRA_FROM_WIDGET = "com.tempoagora.extra.FROM_WIDGET";
     private static final int REQUEST_LOCATION = 410;
     private static final int INK = Color.rgb(24, 53, 68);
     private static final int MUTED = Color.rgb(108, 128, 139);

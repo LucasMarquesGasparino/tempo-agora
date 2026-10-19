@@ -1,3 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="app_background">#F4F8FA</color>
+    <color name="widget_bg">#FFFFFF</color>
+    <color name="widget_stroke">#DCE8ED</color>
+    <color name="widget_ink">#183544</color>
+    <color name="widget_muted">#586C77</color>
+    <color name="widget_accent">#177FAE</color>
+    <color name="widget_rain">#1C7FA8</color>
+    <color name="widget_today_heading">#E5F4FA</color>
+    <color name="widget_days_heading">#EDF3F6</color>
+    <color name="widget_table_bg">#F7FBFC</color>
+    <color name="widget_table_stroke">#E1EFF4</color>
+    <color name="widget_divider">#E3EBEF</color>
+    <color name="widget_button_bg">#E8F4F9</color>
 </resources>
