@@ -244,7 +244,10 @@ public final class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 30) {
             int both = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
                     | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
-            getWindow().getInsetsController().setSystemBarsAppearance(palette.dark ? 0 : both, both);
+            // getDecorView() instala o decor; Window.getInsetsController() antes de
+            // setContentView dá NPE no Android 16.
+            WindowInsetsController controller = getWindow().getDecorView().getWindowInsetsController();
+            if (controller != null) controller.setSystemBarsAppearance(palette.dark ? 0 : both, both);
         } else {
             int flags = getWindow().getDecorView().getSystemUiVisibility();
             if (palette.dark) {
