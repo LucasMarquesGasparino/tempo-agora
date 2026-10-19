@@ -17,13 +17,7 @@ public final class WeatherChartView extends View {
 
     private static final int HOURLY_MODE = 1;
     private static final int DAILY_MODE = 2;
-    private static final int INK = 0xFF183544;
-    private static final int MUTED = 0xFF72838C;
-    private static final int GRID = 0xFFE6EDF0;
-    private static final int TEMP = 0xFFE07838;
-    private static final int RAIN = 0xFF339DC5;
-    private static final int CHANCE = 0xFF7556B5;
-    private static final int SELECTED = 0xFF177FAE;
+    private int INK, MUTED, GRID, TEMP, RAIN, CHANCE, SELECTED;
 
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path path = new Path();
@@ -36,6 +30,7 @@ public final class WeatherChartView extends View {
     private List<WeatherSnapshot.Daily> days = new ArrayList<>();
     private int selected = -1;
     private SelectionListener listener;
+    private Units units = Units.metric();
 
     public WeatherChartView(Context context) {
         super(context);
@@ -43,6 +38,30 @@ public final class WeatherChartView extends View {
         textScale = getResources().getDisplayMetrics().scaledDensity;
         setClickable(true);
         setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        setPalette(Palette.of(context));
+    }
+
+    public void setPalette(Palette palette) {
+        INK = palette.ink;
+        MUTED = palette.muted;
+        GRID = palette.grid;
+        TEMP = palette.temp;
+        RAIN = palette.chartRain;
+        CHANCE = palette.chance;
+        SELECTED = palette.accent;
+        invalidate();
+    }
+
+    public void setUnits(Units value) {
+        units = value == null ? Units.metric() : value;
+        updateDescription();
+        invalidate();
+    }
+
+    /** Muda só a seleção, sem refazer a página. */
+    public void setSelectedIndex(int index) {
+        selected = index;
+        invalidate();
     }
 
     public void setHourly(List<WeatherSnapshot.Hourly> values, int selectedIndex) {
@@ -50,6 +69,7 @@ public final class WeatherChartView extends View {
         hours = values == null ? new ArrayList<WeatherSnapshot.Hourly>() : values;
         selected = selectedIndex;
         days = new ArrayList<>();
+        updateDescription();
         invalidate();
     }
 
@@ -58,7 +78,41 @@ public final class WeatherChartView extends View {
         days = values == null ? new ArrayList<WeatherSnapshot.Daily>() : values;
         selected = selectedIndex;
         hours = new ArrayList<>();
+        updateDescription();
         invalidate();
+    }
+
+    /** Resumo para leitores de tela: faixa de temperatura e maior chance de chuva. */
+    private void updateDescription() {
+        double low = Double.POSITIVE_INFINITY, high = Double.NEGATIVE_INFINITY;
+        double chance = -1;
+        String chanceTime = "";
+        if (mode == HOURLY_MODE) {
+            for (WeatherSnapshot.Hourly hour : hours) {
+                if (valid(hour.temperature)) { low = Math.min(low, hour.temperature); high = Math.max(high, hour.temperature); }
+                if (valid(hour.precipitationProbability) && hour.precipitationProbability > chance) {
+                    chance = hour.precipitationProbability;
+                    chanceTime = hour.time.length() >= 13 ? hour.time.substring(11, 13) + "h" : "";
+                }
+            }
+        } else {
+            for (WeatherSnapshot.Daily day : days) {
+                if (valid(day.minTemperature)) low = Math.min(low, day.minTemperature);
+                if (valid(day.maxTemperature)) high = Math.max(high, day.maxTemperature);
+                if (valid(day.precipitationProbability) && day.precipitationProbability > chance) {
+                    chance = day.precipitationProbability;
+                    chanceTime = day.date;
+                }
+            }
+        }
+        if (Double.isInfinite(low) || Double.isInfinite(high)) {
+            setContentDescription("Gráfico sem dados de temperatura");
+            return;
+        }
+        String range = "Gráfico de temperatura de " + Math.round(units.temperature(low))
+                + " a " + Math.round(units.temperature(high)) + " " + units.temperatureSymbol();
+        if (chance >= 0) range += "; maior chance de chuva " + Math.round(chance) + " por cento em " + chanceTime;
+        setContentDescription(range);
     }
 
     public void setSelectionListener(SelectionListener value) { listener = value; }
@@ -115,8 +169,8 @@ public final class WeatherChartView extends View {
             canvas.drawLine(left, y, right, y, paint);
         }
         paint.setStyle(Paint.Style.FILL);
-        drawText(canvas, Math.round(max) + "°", dp(2), tempTop + dp(4), MUTED, 10);
-        drawText(canvas, Math.round(min) + "°", dp(2), tempBottom, MUTED, 10);
+        drawText(canvas, Format.temperature(max, units), dp(2), tempTop + dp(4), MUTED, 10);
+        drawText(canvas, Format.temperature(min, units), dp(2), tempBottom, MUTED, 10);
 
         path.reset();
         chancePath.reset();
@@ -197,8 +251,8 @@ public final class WeatherChartView extends View {
             canvas.drawLine(left, y, right, y, paint);
         }
         paint.setStyle(Paint.Style.FILL);
-        drawText(canvas, Math.round(max) + "°", dp(2), tempTop + dp(4), MUTED, 10);
-        drawText(canvas, Math.round(min) + "°", dp(2), tempBottom, MUTED, 10);
+        drawText(canvas, Format.temperature(max, units), dp(2), tempTop + dp(4), MUTED, 10);
+        drawText(canvas, Format.temperature(min, units), dp(2), tempBottom, MUTED, 10);
         float rangeWidth = Math.min(dp(22), cell * 0.42f);
         for (int i = 0; i < count; i++) {
             WeatherSnapshot.Daily day = days.get(i);
@@ -210,8 +264,8 @@ public final class WeatherChartView extends View {
                 paint.setColor(i == selected ? SELECTED : TEMP);
                 canvas.drawRoundRect(rect, dp(7), dp(7), paint);
                 paint.setColor(INK);
-                drawCentered(canvas, Math.round(day.maxTemperature) + "°", x, yMax - dp(3), INK, 8);
-                drawCentered(canvas, Math.round(day.minTemperature) + "°", x, yMin + dp(11), INK, 8);
+                drawCentered(canvas, Format.temperature(day.maxTemperature, units), x, yMax - dp(3), INK, 8);
+                drawCentered(canvas, Format.temperature(day.minTemperature, units), x, yMin + dp(11), INK, 8);
             }
             if (valid(day.precipitation) && rainMax > 0) {
                 float height = (float) Math.max(dp(2), day.precipitation / rainMax * (rainBottom - rainTop));
@@ -262,11 +316,11 @@ public final class WeatherChartView extends View {
         paint.setColor(TEMP); paint.setStyle(Paint.Style.STROKE); paint.setStrokeWidth(dp(2.5f));
         canvas.drawLine(left, baseline - dp(3), left + dp(12), baseline - dp(3), paint);
         paint.setStyle(Paint.Style.FILL);
-        drawText(canvas, "°C", left + dp(17), baseline, INK, 10);
+        drawText(canvas, units.temperatureSymbol(), left + dp(17), baseline, INK, 10);
         paint.setColor(RAIN);
         rect.set(left + dp(43), baseline - dp(10), left + dp(51), baseline - dp(2));
         canvas.drawRoundRect(rect, dp(2), dp(2), paint);
-        drawText(canvas, "mm", left + dp(56), baseline, INK, 10);
+        drawText(canvas, units.precipitationSymbol(), left + dp(56), baseline, INK, 10);
         paint.setColor(CHANCE);
         canvas.drawCircle(left + dp(91), baseline - dp(4), dp(3), paint);
         drawText(canvas, "chance %", left + dp(99), baseline, INK, 10);
