@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.SizeF;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.RemoteViews;
 import java.text.SimpleDateFormat;
@@ -35,7 +34,7 @@ final class WidgetUpdater {
     private static final int OPEN_REQUEST = 71;
     private static final int REFRESH_REQUEST_BASE = 7000;
     private static final int MAX_HOURS = 8;
-    private static final int MAX_DAYS = 14;
+    private static final int MAX_DAYS = 7;
     private static final int MAX_SIZES = 4;
     private static final int DEFAULT_WIDTH_DP = 250;
     private static final int DEFAULT_HEIGHT_DP = 430;
@@ -122,7 +121,7 @@ final class WidgetUpdater {
         views.setTextViewText(R.id.widget_humidity, now == null ? "Umidade —" : "Umidade " + Format.percent(now.humidity));
         views.setTextViewText(R.id.widget_wind, windText(now, units));
         views.setTextViewText(R.id.widget_updated, footer);
-        bindForecastTables(context, views, snapshot, today, widthDp, heightDp, units);
+        bindForecastTables(context, views, snapshot, today, heightDp, units);
         views.setOnClickPendingIntent(R.id.widget_root, openIntent(context));
         views.setOnClickPendingIntent(R.id.widget_refresh, refreshIntent(context, id));
         return views;
@@ -185,18 +184,13 @@ final class WidgetUpdater {
     }
 
     private static void bindForecastTables(Context context, RemoteViews views, WeatherSnapshot snapshot,
-                                           String today, int widthDp, int heightDp, Units units) {
+                                           String today, int heightDp, Units units) {
         List<Integer> hourIndices = snapshot == null
                 ? new ArrayList<Integer>() : availableHourIndices(snapshot);
         List<WeatherSnapshot.Daily> days = snapshot == null
                 ? new ArrayList<WeatherSnapshot.Daily>() : availableDays(snapshot, today);
-        int nHours = Math.min(MAX_HOURS, hourIndices.size());
-        int nDays = Math.min(MAX_DAYS, days.size());
-        float density = context.getResources().getDisplayMetrics().density;
-        WidgetSizing.Metrics measured = measure(context, Math.round(widthDp * density));
-        int[] plan = measured != null
-                ? WidgetSizing.plan(Math.round(heightDp * density), measured, nHours, nDays)
-                : WidgetSizing.plan(heightDp, nHours, nDays);
+        int[] plan = WidgetSizing.plan(heightDp, Math.min(MAX_HOURS, hourIndices.size()),
+                Math.min(MAX_DAYS, days.size()));
         List<Integer> shownHours = ForecastTime.sampleEvenly(hourIndices, plan[0]);
         List<WeatherSnapshot.Daily> shownDays = days.subList(0, plan[1]);
 
@@ -229,50 +223,6 @@ final class WidgetUpdater {
                     Format.percent(day.precipitationProbability),
                     i < shownDays.size() - 1));
         }
-    }
-
-    /**
-     * Mede, em px, o layout real do widget com a densidade e a escala de fonte deste
-     * aparelho, em vez de estimar alturas. Devolve null se algo falhar.
-     */
-    private static WidgetSizing.Metrics measure(Context context, int widthPx) {
-        try {
-            LayoutInflater inflater = LayoutInflater.from(context);
-            View root = inflater.inflate(R.layout.widget_weather, null, false);
-            View[] hours = {root.findViewById(R.id.widget_today_title), root.findViewById(R.id.widget_today_table)};
-            View[] days = {root.findViewById(R.id.widget_days_title), root.findViewById(R.id.widget_days_table)};
-            View divider = root.findViewById(R.id.widget_forecast_section_divider);
-
-            show(hours, false); show(days, false); divider.setVisibility(View.GONE);
-            int base = heightOf(root, widthPx);
-            show(hours, true);
-            int withHours = heightOf(root, widthPx);
-            show(hours, false); show(days, true);
-            int withDays = heightOf(root, widthPx);
-            show(hours, true); divider.setVisibility(View.VISIBLE);
-            int withBoth = heightOf(root, widthPx);
-
-            View row = inflater.inflate(R.layout.widget_forecast_row, null, false);
-            int rowHeight = heightOf(row, widthPx);
-            int hoursSection = withHours - base;
-            int daysSection = withDays - base;
-            int dividerHeight = Math.max(0, withBoth - base - hoursSection - daysSection);
-            if (base <= 0 || rowHeight <= 0 || hoursSection <= 0 || daysSection <= 0) return null;
-            int slack = Math.round(6 * context.getResources().getDisplayMetrics().density);
-            return new WidgetSizing.Metrics(base, hoursSection, daysSection, dividerHeight, rowHeight, slack);
-        } catch (Throwable measureFailed) {
-            return null;
-        }
-    }
-
-    private static void show(View[] views, boolean visible) {
-        for (View view : views) view.setVisibility(visible ? View.VISIBLE : View.GONE);
-    }
-
-    private static int heightOf(View view, int widthPx) {
-        view.measure(View.MeasureSpec.makeMeasureSpec(widthPx, View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
-        return view.getMeasuredHeight();
     }
 
     private static RemoteViews forecastRow(Context context, String label, int icon, String temperature,
