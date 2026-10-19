@@ -63,13 +63,34 @@ public final class Place {
         return out;
     }
 
+    /** Lugar do aparelho: coordenadas com 2 casas (~1 km), chave estável e mais privacidade. */
+    public static Place device(String name, String admin1, String country, double latitude, double longitude) {
+        return new Place(name, admin1, country, "", round2(latitude), round2(longitude), "auto", true);
+    }
+
+    public boolean sameKey(Place other) {
+        return other != null && key().equals(other.key());
+    }
+
+    /** Devolve null se faltar latitude/longitude ou se forem inválidas. */
     public static Place fromJson(JSONObject json) {
         if (json == null) return null;
+        double latitude = json.optDouble("latitude", Double.NaN);
+        double longitude = json.optDouble("longitude", Double.NaN);
+        if (!validCoordinates(latitude, longitude)) return null;
         return new Place(json.optString("name", "Local escolhido"),
                 json.optString("admin1", ""), json.optString("country", ""),
-                json.optString("countryCode", ""), json.optDouble("latitude", 0),
-                json.optDouble("longitude", 0), json.optString("timezone", "auto"),
-                json.optBoolean("currentLocation", false));
+                json.optString("countryCode", ""), latitude, longitude,
+                json.optString("timezone", "auto"), json.optBoolean("currentLocation", false));
+    }
+
+    static boolean validCoordinates(double latitude, double longitude) {
+        return !Double.isNaN(latitude) && !Double.isInfinite(latitude) && latitude >= -90 && latitude <= 90
+                && !Double.isNaN(longitude) && !Double.isInfinite(longitude) && longitude >= -180 && longitude <= 180;
+    }
+
+    private static double round2(double value) {
+        return Math.round(value * 100) / 100.0;
     }
 
     private static String clean(String value, String fallback) {

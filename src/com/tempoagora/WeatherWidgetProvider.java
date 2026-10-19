@@ -57,9 +57,7 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
                     places.add(place);
                     List<WeatherSnapshot> snapshots = new WeatherApiClient().fetch(places);
                     if (!snapshots.isEmpty()) {
-                        WeatherSnapshot snapshot = snapshots.get(0);
-                        context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE).edit()
-                                .putString(cacheKey(snapshot.place), snapshot.toJson().toString()).apply();
+                        WeatherCache.write(context, snapshots.get(0));
                     }
                 }
             } catch (Exception ignored) {
@@ -296,14 +294,8 @@ public final class WeatherWidgetProvider extends AppWidgetProvider {
     }
 
     private static WeatherSnapshot readSnapshot(Context context, Place place) {
-        try {
-            String json = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
-                    .getString(cacheKey(place), "");
-            return json.isEmpty() ? null : WeatherSnapshot.fromJson(new JSONObject(json), place);
-        } catch (Exception ignored) { return null; }
+        return WeatherCache.read(context, place);
     }
-
-    private static String cacheKey(Place place) { return "weather_" + place.key().replace(',', '_'); }
 
     private static WeatherSnapshot.Hourly nextHour(WeatherSnapshot snapshot) {
         String now = snapshot.currentTime;

@@ -828,14 +828,18 @@ public final class MainActivity extends Activity {
         refreshing = true;
         if (userInitiated) statusMessage = "Atualizando condições e previsões…";
         renderPage();
+        final List<Place> keep = new ArrayList<>(places);
+        Place widgetPlace = AppPrefs.widgetPlace(this);
+        if (widgetPlace != null) keep.add(widgetPlace);
         worker.execute(() -> {
             try {
-                List<WeatherSnapshot> fetched = api.fetch(places);
+                List<WeatherSnapshot> fetched = WeatherRepository.refresh(MainActivity.this, places);
+                WeatherCache.prune(MainActivity.this, keep);
+                AppPrefs.removeLegacyCache(MainActivity.this);
                 main.post(() -> {
                     if (isFinishing()) return;
                     for (WeatherSnapshot snapshot : fetched) {
                         snapshots.put(snapshot.place.key(), snapshot);
-                        preferences.edit().putString(cacheKey(snapshot.place), snapshot.toJson().toString()).apply();
                         updatePlaceTimezone(snapshot.place);
                     }
                     WeatherWidgetProvider.refreshViews(MainActivity.this);
@@ -1060,13 +1064,8 @@ public final class MainActivity extends Activity {
     }
 
     private WeatherSnapshot readCachedSnapshot(Place place) {
-        try {
-            String json = preferences.getString(cacheKey(place), "");
-            return json.isEmpty() ? null : WeatherSnapshot.fromJson(new JSONObject(json), place);
-        } catch (Exception ignored) { return null; }
+        return WeatherCache.read(this, place);
     }
-
-    private String cacheKey(Place place) { return "weather_" + place.key().replace(',', '_'); }
 
     private void persistWidgetPlace() {
         if (preferences != null && activePlace != null) {
