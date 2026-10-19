@@ -203,7 +203,7 @@
             android:paddingTop="2dp"
             android:paddingBottom="1dp">
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.15" android:text="HORA" android:textColor="@color/widget_muted" android:textSize="9sp" />
-            <View android:layout_width="18dp" android:layout_height="1dp" />
+            <FrameLayout android:layout_width="18dp" android:layout_height="1dp" />
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.65" android:gravity="center" android:text="TEMP." android:textColor="@color/widget_muted" android:textSize="9sp" />
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="mm" android:textColor="@color/widget_muted" android:textSize="9sp" />
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.9" android:gravity="end" android:text="CHANCE" android:textColor="@color/widget_muted" android:textSize="9sp" />
@@ -260,7 +260,7 @@
             android:paddingTop="2dp"
             android:paddingBottom="1dp">
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.15" android:text="DIA" android:textColor="@color/widget_muted" android:textSize="9sp" />
-            <View android:layout_width="18dp" android:layout_height="1dp" />
+            <FrameLayout android:layout_width="18dp" android:layout_height="1dp" />
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.65" android:gravity="center" android:text="MÁX / MÍN" android:textColor="@color/widget_muted" android:textSize="9sp" />
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="mm" android:textColor="@color/widget_muted" android:textSize="9sp" />
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.9" android:gravity="end" android:text="CHANCE" android:textColor="@color/widget_muted" android:textSize="9sp" />
