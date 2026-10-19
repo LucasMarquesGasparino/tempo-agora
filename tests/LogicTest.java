@@ -144,11 +144,18 @@ public final class LogicTest {
     }
 
     static void testWidgetSizing() {
-        equal(new int[] {7, 7}, WidgetSizing.plan(430, 8, 7), "widget grande");
-        equal(new int[] {4, 0}, WidgetSizing.plan(250, 8, 7), "widget médio só mostra horas");
+        equal(new int[] {2, 8}, WidgetSizing.plan(430, 8, 14), "widget grande: dias têm prioridade");
+        equal(new int[] {2, 13}, WidgetSizing.plan(500, 2, 14), "poucas horas: sobra vai para os dias");
+        equal(new int[] {8, 3}, WidgetSizing.plan(600, 8, 3), "poucos dias: sobra volta para as horas");
+        equal(new int[] {0, 2}, WidgetSizing.plan(250, 8, 7), "widget médio mostra dias");
+        equal(new int[] {0, 5}, WidgetSizing.plan(300, 2, 7), "sem espaço para as duas tabelas, só dias");
+        equal(new int[] {6, 0}, WidgetSizing.plan(300, 8, 0), "sem dias, mostra horas");
         equal(new int[] {0, 0}, WidgetSizing.plan(150, 8, 7), "widget pequeno não mostra tabelas");
-        int[] shortPlan = WidgetSizing.plan(300, 2, 7);
-        check(shortPlan[0] == 2, "duas horas disponíveis aparecem");
+        equal(new int[] {0, 0}, WidgetSizing.plan(430, 0, 0), "sem dados, sem tabelas");
+        WidgetSizing.Metrics px = new WidgetSizing.Metrics(440, 99, 104, 25, 47, 17);
+        equal(new int[] {2, 4}, WidgetSizing.plan(1000, px, 8, 14), "alturas medidas em px");
+        equal(new int[] {4, 13}, WidgetSizing.plan(1500, px, 8, 14), "horas limitadas a 4 enquanto faltam dias");
+        equal(new int[] {7, 14}, WidgetSizing.plan(1700, px, 8, 14), "todos os 14 dias quando cabem");
         check(WidgetSizing.compact(250, 100), "altura baixa é compacto");
         check(!WidgetSizing.compact(250, 430), "tamanho grande não é compacto");
     }
